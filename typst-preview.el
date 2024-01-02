@@ -90,7 +90,7 @@
   "Default browser for previewing Typst files.
  Options: \"xwidget\",\"safari\", or \"default\".")
 
-(defvar typst-preview-host "127.0.0.1:23627"
+(defvar typst-preview-host "127.0.0.1:0"
   "Default address for typst websocket.")
 
 
@@ -99,9 +99,9 @@
 ;; This technique makes it easier and less verbose to define keymaps
 ;; that have many bindings.
 
-(defvar typst-preview-map
+(defvar typst-preview-mode-map
   ;; This makes it easy and much less verbose to define keys
-  (let ((map (make-sparse-keymap "typst-preview map"))
+  (let ((map (make-sparse-keymap "typst-preview-mode map"))
         (maps (list
                ;; Mappings go here, e.g.:
                "C-c C-j" #'typst-preview-send-position
@@ -128,52 +128,62 @@
 	(typst-preview-start)
 
 	)
-    (remove-hook 'after-change-functions #'typst-send-buffer))
+    (remove-hook 'after-change-functions #'typst-send-buffer-on-type t))
+  :key-map typst-preview-mode-map
   )
 
 (defun typst-preview-start ()
-  (interactive)
   "Start typst-preview server and connect current buffer."
-
-  (setq typst-preview-file (buffer-name))
-  (setq typst-preview-path (buffer-file-name))
-
-  (setq typst-ws-buffer (get-buffer-create "*ws-typst-server*"))
-
-  (start-process "typst-preview-proc" typst-ws-buffer
-               "typst-preview" "--partial-rendering" "--no-open"
-	       typst-preview-file)
   
-  (sleep-for 1) ;; just for testing!
+  (interactive)
+  (if (typst-preview-connected-p)
+      (message "Typst-preview already connected")
+    
+    (setq typst-preview-file (buffer-name))
+    (setq typst-preview-path (buffer-file-name))
+    (setq typst-preview-dir (file-name-directory typst-preview-path))
+    (setq typst-ws-buffer (get-buffer-create "*ws-typst-server*"))
+
+    (start-process "typst-preview-proc" typst-ws-buffer
+		   "typst-preview" "--partial-rendering" "--no-open"
+		   "--host" typst-preview-host
+		   "--control-plane-host"  "127.0.0.1:0"
+		   "--data-plane-host"  "127.0.0.1:0"
+		   "--root" typst-preview-dir
+		   typst-preview-path)
+    
+    (sleep-for 1) ;; just for testing!
 
 
-  ;; find typst-preview control-host address from typst-ws-buffer
-  (setq control-host (find-server-address "Control plane"))
-  ;; (setq static-host (find-server-address "Static file"))
+    ;; find typst-preview control-host address from typst-ws-buffer
+    (setq control-host (find-server-address "Control plane"))
+    (setq static-host (find-server-address "Static file"))
+    ;; (setq data-host (find-server-address "Data plane"))
+    
+    ;; connect to typst-preview socket
+    (setq control-socket
+	  (websocket-open (concat "ws://" control-host)
+			  :on-message (lambda (_websocket frame) (parse-message _websocket frame))
+			  :on-close (lambda (_websocket) (message "websocket closed")
+				      (kill-buffer typst-ws-buffer)
+				      )))
 
-  
-  ;; connect to typst-preview socket
-  (setq control-socket
-	(websocket-open (concat "ws://" control-host)
-			:on-message (lambda (_websocket frame) (parse-message _websocket frame))
-			:on-close (lambda (_websocket) (message "websocket closed")
-				    (kill-buffer typst-ws-buffer)
-				    )))
 
+    (typst-preview-sync-memory)
+    ;; add hook to update on change
+    ;; (sleep-for 2)
 
-  ;; add hook to update on change
-  ;; (sleep-for 2)
+    (message "Current buffer: %S" (current-buffer))
+    (message "typst-preview-buffer is %S" typst-preview-file)
+    (with-current-buffer typst-preview-file
+      (add-hook 'after-change-functions
+		#'typst-send-buffer-on-type nil t)
+      )
 
-  (message "Current buffer: %S" (current-buffer))
-  (message "typst-preview-buffer is %S" typst-preview-file )
-  (with-current-buffer typst-preview-file
-	(add-hook 'after-change-functions
-      #'typst-send-buffer-on-type nil t)
+    ;; open typst-browser
+
+    (typst-connect-browser typst-preview-browser static-host)
     )
-
-  ;; open typst-browser
-
-  (typst-connect-browser typst-preview-browser typst-preview-host)
   )
 
 (defun typst-preview-connected-p ()
@@ -197,12 +207,13 @@
 (defun typst-preview-send-position ()
   "send point in buffer to preview server"
   (interactive)
-  (let ((msg (json-encode `(("event". "panelScrollTo")
+  (let ((msg (json-encode `(("event" . "panelScrollTo")
 			    ("filepath" . ,typst-preview-path)
-			    ("line" . ,(line-number-at-pos))
-			    ("character" . ,(current-column)))
+			    ("line" . ,(1- (line-number-at-pos)))
+			    ("character" . ,(max 1 (current-column))))
 			  )))
     (websocket-send-text control-socket msg)
+    (message "Sending position to typst-preview server")
     ))
 
 (defun typst-preview-sync-memory ()
@@ -213,9 +224,18 @@
 				   . ,(buffer-whole-string)
 				   ))))))
   (websocket-send-text control-socket msg)
+  (message "syncing memory files")
   ))
 
 
+(defun typst-preview-open-browser ()
+  "Open typst-preview browser interactively"
+  (interactive)
+  (let* ((browser-list '("xwidget" "safari" "google chrome"))
+	 (browser (completing-read "Browser:" browser-list nil nil)))
+    (typst-connect-browser browser static-host)
+    )
+  )
 ;;;; Functions
 
 ;;;;; Public
@@ -223,10 +243,16 @@
 ;; this is probably not the right way to do it but eh
 (make-variable-buffer-local 'typst-preview-file)
 (make-variable-buffer-local 'typst-preview-path)
+(make-variable-buffer-local 'typst-preview-host)
 (make-variable-buffer-local 'control-socket)
 (make-variable-buffer-local 'control-host)
 (make-variable-buffer-local 'typst-ws-buffer)
 ;;;;; Private
+
+;; todo: implement this
+;; (defun is-valid-browser (browser)
+;;   "Test if argument browser is a valid browser "
+;;   )
 
 (defun parse-message (sock frame)
   "React to message received from typst-preview server."
@@ -241,7 +267,11 @@
       ("compileStatus"
        (if (string= "CompileError" (gethash "kind" msg))
 	   (message "Compile error")
-				)))))
+	 ))
+      ("syncEditorChanges"
+       (typst-preview-sync-memory)
+       )
+      )))
 
 
 (defun typst-connect-browser (browser hostname)
@@ -250,9 +280,16 @@
     ("safari" (shell-command (concat "open -a Safari http://" hostname)))
     ("xwidget" (xwidget-webkit-browse-url (concat "http://" hostname)))
     ("default" (shell-command (concat "open http://" hostname)))
-    (_ (shell-command (concat "open -a " browser " ws://" hostname)))
+    (_ (shell-command
+	(concat "open -a " (bashitize-string browser) " http://" hostname)))
     )
   )
+
+(defun bashitize-string (str)
+  "replace spaces with \\ space in string"
+  (string-replace " " "\\ " str)
+  )
+
 
 (defun find-server-address (str)
   "Find server address for typst-preview:

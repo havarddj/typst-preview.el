@@ -4,7 +4,7 @@ Live preview of typst files inside emacs! Building on [[https://github.com/Enter
 
 *Features*:
 - Live preview of edits
-- Source to preview jumping
+- Source to preview jumping[fn:: this only works in text (i.e. not in a code block, say in math mode, because of how the typst compiler works. See https://github.com/Enter-tainer/typst-preview/issues/182)]
 - Preview to source jumping
 
 * Installation
@@ -65,7 +65,8 @@ Enabling ~typst-preview-mode~ runs ~typst-preview-start~, which does a few thing
 * Todos: 
 - [ ] Open browsers in linux/windows, not just MacOS
 - [ ] Ensure that opening several .typ instances works
-- [ ] Clean up typst-preview-start and fix the xwidget hack
+- [X] Clean up typst-preview-start and fix the xwidget hack
+- [ ] Add license
 
 
 
