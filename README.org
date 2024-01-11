@@ -1,6 +1,10 @@
 #+title: typst-preview.el
 #+author: Håvard Damm-Johnsen
+
+_WARNING_: This is work in progress, and is currently quite janky. Shutdown and startup is not very graceful, and it doesn't know how to work with multiple documents simultaneously. 
+
 Live preview of typst files inside emacs! Building on [[https://github.com/Enter-tainer/typst-preview][typst-preview]], which was originally written for VS Code, and also inspired by [[https://github.com/chomosuke/typst-preview.nvim][typst-preview.nvim]].
+
 
 *Features*:
 - Live preview of edits
@@ -69,7 +73,7 @@ Enabling ~typst-preview-mode~ runs ~typst-preview-start~, which does a few thing
 * Todos: 
 - [ ] Open browsers in linux/windows, not just MacOS
 - [ ] Ensure that opening several .typ instances works
-- [X] Clean up typst-preview-start and fix the xwidget hack
+- [ ] Clean up typst-preview-start and fix the xwidget hack
 - [ ] Add license
 
 
