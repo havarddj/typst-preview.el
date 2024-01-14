@@ -105,5 +105,5 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
     variables?
 -   [x] Optionally centre buffer on preview-to-source
 -   [x] Migrate to README.md
--   [ ] Add screencast
+-   [x] Add screencast
 -   [ ] Add outline functionality
