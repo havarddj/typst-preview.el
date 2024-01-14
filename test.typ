@@ -1,8 +1,11 @@
 #show link: set text(fill: rgb(150, 50, 100))
-#let title = [Typst-preview.el: live preview of typst documents]
+#let title = [Typst-preview.el: live preview of typst documents!]
 #align(center, text(17pt)[
     *#title*
 ])
+
+// This is an old version of README.md!
+
 
 Live preview of typst files inside emacs! Building on #link("https://github.com/Enter-tainer/typst-preview")[typst-preview], which was originally written for VS Code, and also inspired by #link("https://github.com/chomosuke/typst-preview.nvim")[typst-preview.nvim].
 
@@ -14,7 +17,7 @@ Live preview of typst files inside emacs! Building on #link("https://github.com/
 = Installation
 
 == MELPA
-Currently not on Melpa 
+Currently not on Melpa. 
 
 == Manual installation
 
@@ -65,12 +68,6 @@ Enabling `typst-preview-mode` runs `typst-preview-start`, which does a few thing
 - Connects to the `typst-preview` server using `websocket`
 - Opens a browser pointing at the address of the preview
 - Adds a hook to `after-change-functions` which sends the buffer to the server at each keystroke. 
-
-== Todos: 
-- [ ] Open browsers in linux/windows, not just MacOS
-- [ ] Ensure that opening several .typ instances works
-- [ ] Clean up typst-preview-start and fix the xwidget hack
-- [ ] Add license
 
 
 

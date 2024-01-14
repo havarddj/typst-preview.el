@@ -1,7 +1,7 @@
 typst-preview.el
 ==========
 
-*Warning*: This is work in progress and quite rough around the edges, but the basic functionality is there.
+	*Warning*: This is work in progress and quite rough around the edges, but the basic functionality is there.
 
 Live preview of typst files inside emacs! Building on
 [typst-preview](https://github.com/Enter-tainer/typst-preview), which
@@ -13,6 +13,9 @@ was originally written for VS Code, and also inspired by
 -   Live preview of edits
 -   Source to preview jumping
 -   Preview to source jumping
+
+![](typst-preview-demo.mov)
+
 
 # Installation
 
