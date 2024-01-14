@@ -14,6 +14,7 @@ was originally written for VS Code, and also inspired by
 -   Source to preview jumping
 -   Preview to source jumping
 
+https://github.com/havarddj/typst-preview.el/assets/96797844/e44426b2-b404-416e-bb1d-54242f8bb077
 
 
 # Installation
