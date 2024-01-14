@@ -1,63 +1,4 @@
-// *spacing, headings & eq numbering*
-#set heading(numbering: "1.1.1")
-#set math.equation(numbering: "(1.1)")
-#show heading: set block(above: 1.4em, below: 1em)
-
-#show par: set block(spacing: 1.1em)
-// *font*
-#set text(
-  // font: "New Computer Modern",
-  size: 11pt
-)
-
-// #show heading.where(level:1): it => [
-//   #set align(center)
-//   #set text(12pt, weight: "regular")
-//     #counter(heading).display() #smallcaps(it.body)
-// ]
-// #show heading.where(level:2): it => [
-//   #set align(center)
-//   #set text(11pt, weight: "regular")
-//     #counter(heading).display() #smallcaps(it.body)
-// ]
-
-
-// *bibliography*
-// #set cite(style: "chicago-author-date")
-
 #show link: set text(fill: rgb(150, 50, 100))
-
-
-// *commutative diagrams*
-#import "@preview/commute:0.2.0": node, arr, commutative-diagram
-
-// *theorem environments*
-#import "@preview/ctheorems:1.1.0": *
-#show: thmrules
-// #let mythm(name, Name) = thmbox(name, Name, inset: (x: 0em, top: 0em),
-//  breakable:true, base_level: 1.1heorem")
-// heorem = mythm("theorem", "Theorem")
-// #let lemma = mythm("lemma", "Lemma")
-// #let proposition = mythm("proposition", "Proposition")
-// #let definition = mythm("definition", "Definition")
-// #let example = mythm("example", "Example")
-#let theorem = thmbox("theorem", "Theorem", inset: (x: 0em, top: 0em), base_level: 1)
-#let lemma = thmbox("theorem", "Lemma", inset: (x: 0em, top: 0em), base_level: 1)
-#let proposition = thmbox("theorem", "Proposition", inset: (x: 0em, top: 0em), base_level: 1)
-#let definition = thmbox("theorem", "Definition", inset: (x: 0em, top: 0em), base_level: 1)
-#let example = thmbox("theorem", "Example", inset: (x: 0em, top: 0em), base_level: 1)
-
-
-#let proof = thmplain(
-    "proof",
-    "Proof",
-    base: "theorem",
-    inset: (x: 0em, top: 0em),
-    bodyfmt: body => [#body #h(1fr) $square$]
-).with(numbering: none)
-
-// *title stuff*
-
 #let title = [Typst-preview.el: live preview of typst documents]
 #align(center, text(17pt)[
     *#title*
@@ -73,7 +14,7 @@ Live preview of typst files inside emacs! Building on #link("https://github.com/
 = Installation
 
 == MELPA
-Currently not on Melpa
+Currently not on Melpa 
 
 == Manual installation
 

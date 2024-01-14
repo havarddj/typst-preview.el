@@ -93,6 +93,8 @@
 (defvar typst-preview-host "127.0.0.1:0"
   "Default address for typst websocket.")
 
+(defvar tp--active-buffers '()
+  "Active typst buffers")
 
 ;;;;; Keymaps
 
@@ -126,11 +128,19 @@
       (progn
 	(message "Typst-preview enabled!")
 	(typst-preview-start)
-
 	)
-    (remove-hook 'after-change-functions #'typst-send-buffer-on-type t))
+    (remove-hook 'after-change-functions #'tp--send-buffer-on-type t))
   :key-map typst-preview-mode-map
   )
+
+
+;; this is probably not the right way to do it but eh
+(make-variable-buffer-local 'tp--file)
+(make-variable-buffer-local 'tp--file-path)
+(make-variable-buffer-local 'tp--control-socket)
+(make-variable-buffer-local 'tp--control-host)
+(make-variable-buffer-local 'tp--ws-buffer)
+(make-variable-buffer-local 'tp--process)
 
 (defun typst-preview-start ()
   "Start typst-preview server and connect current buffer."
@@ -138,34 +148,34 @@
   (interactive)
   (if (typst-preview-connected-p)
       (message "Typst-preview already connected")
+    ;; these are buffer-local
+    (setq tp--file (buffer-name))
+    (setq tp--file-path (buffer-file-name))
+    (setq tp--preview-dir (file-name-directory tp--file-path))
+    (setq tp--ws-buffer (get-buffer-create "*ws-typst-server*"))
     
-    (setq typst-preview-file (buffer-name))
-    (setq typst-preview-path (buffer-file-name))
-    (setq typst-preview-dir (file-name-directory typst-preview-path))
-    (setq typst-ws-buffer (get-buffer-create "*ws-typst-server*"))
-
-    (start-process "typst-preview-proc" typst-ws-buffer
+    (setq tp--process (start-process "typst-preview-proc" tp--ws-buffer
 		   "typst-preview" "--partial-rendering" "--no-open"
 		   "--host" typst-preview-host
 		   "--control-plane-host"  "127.0.0.1:0"
 		   "--data-plane-host"  "127.0.0.1:0"
-		   "--root" typst-preview-dir
-		   typst-preview-path)
+		   "--root" tp--preview-dir
+		   tp--file-path))
     
     (sleep-for 1) ;; just for testing!
 
 
-    ;; find typst-preview control-host address from typst-ws-buffer
-    (setq control-host (find-server-address "Control plane"))
-    (setq static-host (find-server-address "Static file"))
-    ;; (setq data-host (find-server-address "Data plane"))
-    
+    ;; find typst-preview tp--control-host address from tp--ws-buffer
+    (setq tp--control-host (tp--find-server-address "Control plane"))
+    (setq tp--static-host (tp--find-server-address "Static file"))
+    ;; (setq data-host (tp--find-server-address "Data plane"))
+    (message "Control host: %S \n Static host: %S" tp--control-host tp--static-host)
     ;; connect to typst-preview socket
-    (setq control-socket
-	  (websocket-open (concat "ws://" control-host)
-			  :on-message (lambda (_websocket frame) (parse-message _websocket frame))
+    (setq tp--control-socket
+	  (websocket-open (concat "ws://" tp--control-host)
+			  :on-message (lambda (_websocket frame) (tp--parse-message _websocket frame))
 			  :on-close (lambda (_websocket) (message "websocket closed")
-				      (kill-buffer typst-ws-buffer)
+				      (kill-buffer tp--ws-buffer)
 				      )))
 
 
@@ -174,28 +184,39 @@
     ;; (sleep-for 2)
 
     (message "Current buffer: %S" (current-buffer))
-    (message "typst-preview-buffer is %S" typst-preview-file)
-    (with-current-buffer typst-preview-file
+    (message "typst-preview-buffer is %S" tp--file)
+    (with-current-buffer tp--file
       (add-hook 'after-change-functions
-		#'typst-send-buffer-on-type nil t)
+		#'tp--send-buffer-on-type nil t)
       )
 
     ;; open typst-browser
 
-    (typst-connect-browser typst-preview-browser static-host)
+    (tp--connect-browser typst-preview-browser tp--static-host)
+    (push `(,tp--file-path) tp--active-buffers)
     )
   )
 
 (defun typst-preview-connected-p ()
   "Returns t if websocket is connected to typst-preview server"
-  (interactive)
-  (websocket-openp control-socket))
+  (and
+   (boundp 'tp--control-socket)
+   (websocket-openp tp--control-socket)
+   (process-live-p tp--process)))
 
 (defun typst-preview-stop ()
   "Stop typst-preview buffer by killing websocket connection"
   (interactive)
-  (kill-buffer typst-ws-buffer)
+  (if (not (typst-preview-connected-p))
+      (message "No active typst preview in this buffer")
+    (stop-process tp--process)
+    (delete `(,tp--file-path) tp--active-buffers)
+    (if (eq '() tp--active-buffers)
+	(kill-buffer tp--ws-buffer)
+      )
+    )
   )
+
 (defun typst-preview-restart ()
   "Restart typst-preview server"
   (interactive)
@@ -208,11 +229,11 @@
   "send point in buffer to preview server"
   (interactive)
   (let ((msg (json-encode `(("event" . "panelScrollTo")
-			    ("filepath" . ,typst-preview-path)
+			    ("filepath" . ,tp--file-path)
 			    ("line" . ,(1- (line-number-at-pos)))
 			    ("character" . ,(max 1 (current-column))))
 			  )))
-    (websocket-send-text control-socket msg)
+    (websocket-send-text tp--control-socket msg)
     (message "Sending position to typst-preview server")
     ))
 
@@ -220,10 +241,10 @@
   "Sync typst-preview memory"
   (interactive)
 (let ((msg (json-encode `(("event" . "syncMemoryFiles")
-			("files"  (,typst-preview-path
-				   . ,(buffer-whole-string)
+			("files"  (,tp--file-path
+				   . ,(tp--stringify-buffer)
 				   ))))))
-  (websocket-send-text control-socket msg)
+  (websocket-send-text tp--control-socket msg)
   (message "syncing memory files")
   ))
 
@@ -233,20 +254,12 @@
   (interactive)
   (let* ((browser-list '("xwidget" "safari" "google chrome"))
 	 (browser (completing-read "Browser:" browser-list nil nil)))
-    (typst-connect-browser browser static-host)
+    (tp--connect-browser browser tp--static-host)
     )
   )
 ;;;; Functions
 
 ;;;;; Public
-
-;; this is probably not the right way to do it but eh
-(make-variable-buffer-local 'typst-preview-file)
-(make-variable-buffer-local 'typst-preview-path)
-(make-variable-buffer-local 'typst-preview-host)
-(make-variable-buffer-local 'control-socket)
-(make-variable-buffer-local 'control-host)
-(make-variable-buffer-local 'typst-ws-buffer)
 ;;;;; Private
 
 ;; todo: implement this
@@ -254,16 +267,16 @@
 ;;   "Test if argument browser is a valid browser "
 ;;   )
 
-(defun parse-message (sock frame)
+(defun tp--parse-message (sock frame)
   "React to message received from typst-preview server."
   (let* ((msg (json-parse-string (websocket-frame-text frame)))
 	 (event (gethash "event" msg))
 	 )
-    ;; (message "typst-preview-file: %s" typst-preview-file)
+    ;; (message "typst preview file: %s" tp--file)
     (pcase event
       ("editorScrollTo"
        (let ((buffer (car (last (split-string (gethash "filepath" msg) "/")))))
-	 (goto-position-in-buffer buffer (gethash "start" msg))))
+	 (tp--goto-buffer-position buffer (gethash "start" msg))))
       ("compileStatus"
        (if (string= "CompileError" (gethash "kind" msg))
 	   (message "Compile error")
@@ -274,41 +287,36 @@
       )))
 
 
-(defun typst-connect-browser (browser hostname)
+(defun tp--connect-browser (browser hostname)
   "Open browser at websocket URL hostname."
   (pcase browser
     ("safari" (shell-command (concat "open -a Safari http://" hostname)))
     ("xwidget" (xwidget-webkit-browse-url (concat "http://" hostname)))
     ("default" (shell-command (concat "open http://" hostname)))
     (_ (shell-command
-	(concat "open -a " (bashitize-string browser) " http://" hostname)))
+  	(concat "open -a " (string-replace " " "\\ " (browser)) " http://" hostname)))
     )
   )
 
-(defun bashitize-string (str)
-  "replace spaces with \\ space in string"
-  (string-replace " " "\\ " str)
-  )
 
-
-(defun find-server-address (str)
+(defun tp--find-server-address (str)
   "Find server address for typst-preview:
-str should be either \"control-host\" or \"static-host\"."
+str should be either \"tp--control-host\" or \"tp--static-host\"."
   (interactive)
-  (with-current-buffer typst-ws-buffer
+  (with-current-buffer tp--ws-buffer
     (save-excursion
-      (beginning-of-buffer)
-      (search-forward (concat str " server listening on:") nil)
+      (end-of-buffer)
+      (search-backward (concat str " server listening on:") nil)
       (car (last (split-string (thing-at-point 'line 'no-properties))))
       )))
 
-(defun get-position-in-buffer ()
+(defun tp--get-buffer-position ()
   "Get position in buffer as a vector"
        (interactive)
        (vector (line-number-at-pos) (current-column)))
 			  
 
-(defun goto-position-in-buffer (buffer-name vec)
+(defun tp--goto-buffer-position (buffer-name vec)
   "Go to a specific position vec = (line, column) in the specified buffer."
   (message "Going to %s in %s" vec buffer-name)
   (pop-to-buffer buffer-name)
@@ -316,7 +324,7 @@ str should be either \"control-host\" or \"static-host\"."
     (forward-line (aref vec 0))
     (forward-char (aref vec 1)))
 
-(defun buffer-whole-string ()
+(defun tp--stringify-buffer ()
   "return contents of current buffer as string"
   (save-excursion
     (save-restriction
@@ -324,22 +332,22 @@ str should be either \"control-host\" or \"static-host\"."
       (buffer-substring-no-properties (point-min) (point-max)))))
 
 
-(defun typst-send-buffer ()
+(defun tp--send-buffer ()
   "Send buffer to typst-preview server."
   (let ((content
 	 (json-encode `(("event" . "updateMemoryFiles")
-			("files"  (,typst-preview-path
-				   . ,(buffer-whole-string)
-				   ))))))    ;; (message "Content from typst-send-buffer: %s" content)
+			("files"  (,tp--file-path
+				   . ,(tp--stringify-buffer)
+				   ))))))    ;; (message "Content from tp--send-buffer: %s" content)
     
-    (websocket-send-text control-socket content)
+    (websocket-send-text tp--control-socket content)
     ))
 
 ;; according to SO, https://stackoverflow.com/questions/31079099/emacs-after-change-functions-are-not-executed-after-buffer-modification
 ;; need to wrap this, and provide input variables
-(defun typst-send-buffer-on-type (begin end length)
+(defun tp--send-buffer-on-type (begin end length)
   (let ((inhibit-modification-hooks nil))
-    (typst-send-buffer))
+    (tp--send-buffer))
   )
 
 

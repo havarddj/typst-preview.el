@@ -1,7 +1,7 @@
 #+title: typst-preview.el
 #+author: Håvard Damm-Johnsen
 
-_WARNING_: This is work in progress, and is currently quite janky. Shutdown and startup is not very graceful, and it doesn't know how to work with multiple documents simultaneously. 
+_WARNING_: This is work in progress, and is currently quite janky. Shutdown and startup is not very graceful, and it doesn't know how to work with multiple documents simultaneously. But the basic functionality is there.i
 
 Live preview of typst files inside emacs! Building on [[https://github.com/Enter-tainer/typst-preview][typst-preview]], which was originally written for VS Code, and also inspired by [[https://github.com/chomosuke/typst-preview.nvim][typst-preview.nvim]].
 
@@ -75,6 +75,8 @@ Enabling ~typst-preview-mode~ runs ~typst-preview-start~, which does a few thing
 - [ ] Ensure that opening several .typ instances works
 - [ ] Clean up typst-preview-start and fix the xwidget hack
 - [ ] Add license
+- [ ] Fix "revert buffer makes typst restart" - should be enough to look for existing instance. Does reverting reset buffer-local variables?
+- [ ] Optionally centre buffer on preview-to-source
 
 
 
