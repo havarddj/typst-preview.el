@@ -50,7 +50,7 @@ Or, if you use `use-package`, try:
 ```
 
 
-# Usage and installation
+# Usage and configuration
 
 ## Basic usage
 
