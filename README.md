@@ -1,10 +1,7 @@
 typst-preview.el
 ==========
 
-*Warning*: This is work in progress, and is currently quite
-janky. Shutdown and startup is not very graceful, and it doesn\'t know
-how to work with multiple documents simultaneously. But the basic
-functionality is there.
+*Warning*: This is work in progress and quite rough around the edges, but the basic functionality is there.
 
 Live preview of typst files inside emacs! Building on
 [typst-preview](https://github.com/Enter-tainer/typst-preview), which
@@ -68,18 +65,15 @@ of how the typst compiler works. See
 
 ## Change default browser
 
-To preview the .typ file in a non-default browser:
-
-```el
-(setq typst-preview-browser "safari")
-```
-
 To preview the .typ file using `xwidget`, provided your emacs is built
 with `xwidget`-support:
 
 ```el
-(setq typst-preview-browser "xwidget")
+(setq typst-preview-browser "xwidget") ;; default is "default"
 ```
+
+To preview the .typ file in a non-default browser, you can set `typst-preview-browser` to a browser of your choice, and `typst-preview` will try to find the browser using `(executable-find typst-preview-browser)`. This does not work on macOS, but might perhaps work on linux. You can alternatively add a hook to `typst-preview-mode-hook` to set `browse-url-generic-program` for typst buffers specifically. 
+
 
 ## Details:
 
@@ -93,12 +87,16 @@ few things:
 -   Adds a hook to `after-change-functions` which sends the buffer to
     the server at each keystroke.
 
+## License:
+This project is licensed under the GPL License - see the LICENSE.md file for details
+
+
 # Todos:
 
 -   [x] Open browsers in linux/windows, not just MacOS
 -   [x] Ensure that opening several .typ instances works
 -   [ ] Clean up typst-preview-start and fix the xwidget hack
--   [ ] Add license
+-   [x] Add license
 -   [ ] Fix \"revert buffer makes typst restart\" - should be enough to
     look for existing instance. Does reverting reset buffer-local
     variables?
