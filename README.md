@@ -50,7 +50,6 @@ Or, if you use `use-package`, try:
 ```
 
 
-========
 # Usage and installation
 
 ## Basic usage
@@ -96,14 +95,14 @@ few things:
 
 # Todos:
 
--   [ ] Open browsers in linux/windows, not just MacOS
+-   [x] Open browsers in linux/windows, not just MacOS
 -   [x] Ensure that opening several .typ instances works
 -   [ ] Clean up typst-preview-start and fix the xwidget hack
 -   [ ] Add license
 -   [ ] Fix \"revert buffer makes typst restart\" - should be enough to
     look for existing instance. Does reverting reset buffer-local
     variables?
--   [ ] Optionally centre buffer on preview-to-source
+-   [x] Optionally centre buffer on preview-to-source
 -   [x] Migrate to README.md
 -   [ ] Add screencast
 -   [ ] Add outline functionality

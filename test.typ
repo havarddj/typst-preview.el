@@ -45,7 +45,7 @@ Inside a .typ-file, run `M-x typst-preview-mode`. This will start a preview in y
 Start, stop and restart ~typst-preview~ using ~M-x typst-preview-start~, ~M-x typst-preview-stop~ and ~M-x typst-preview-restart~. 
 
 Jumping from source to preview: `M-x typst-preview-send-position`. 
-This only works in text (i.e. not in a code block, say in math mode) because of how the typst compiler works. See #link("https://github.com/Enter-tainer/typst-preview/issues/182") 
+This only works in text (i.e. not in a code block or in math mode) because of how the typst compiler works. See #link("https://github.com/Enter-tainer/typst-preview/issues/182") 
 
 == Change default browser
 

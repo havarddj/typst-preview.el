@@ -95,6 +95,8 @@
 
 (defvar tp--active-buffers '()
   "Active typst buffers")
+(defvar typst-preview-center-src t
+  "If non-NIL, center typst preview source buffer when jumping to source")
 
 ;;;;; Keymaps
 
@@ -252,7 +254,7 @@
 (defun typst-preview-open-browser ()
   "Open typst-preview browser interactively"
   (interactive)
-  (let* ((browser-list '("xwidget" "safari" "google chrome"))
+  (let* ((browser-list '("default" "xwidget" "safari" "google chrome"))
 	 (browser (completing-read "Browser:" browser-list nil nil)))
     (tp--connect-browser browser tp--static-host)
     )
@@ -290,11 +292,13 @@
 (defun tp--connect-browser (browser hostname)
   "Open browser at websocket URL hostname."
   (pcase browser
-    ("safari" (shell-command (concat "open -a Safari http://" hostname)))
     ("xwidget" (xwidget-webkit-browse-url (concat "http://" hostname)))
-    ("default" (shell-command (concat "open http://" hostname)))
-    (_ (shell-command
-  	(concat "open -a " (string-replace " " "\\ " (browser)) " http://" hostname)))
+    ("default" (browse-url (concat "http://" hostname)))
+    (_
+     (let* ((browse-url-generic-program (executable-find browser))
+	    (browse-url-browser-function 'browse-url-generic))
+       (browse-url (concat "http://" hostname)))
+     )
     )
   )
 
@@ -322,7 +326,9 @@ str should be either \"tp--control-host\" or \"tp--static-host\"."
   (pop-to-buffer buffer-name)
     (goto-char (point-min))
     (forward-line (aref vec 0))
-    (forward-char (aref vec 1)))
+    (forward-char (aref vec 1))
+    (if typst-preview-center-src
+	(recenter-top-bottom)))
 
 (defun tp--stringify-buffer ()
   "return contents of current buffer as string"
