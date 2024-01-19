@@ -211,7 +211,7 @@
   (interactive)
   (if (not (typst-preview-connected-p))
       (message "No active typst preview in this buffer")
-    (stop-process tp--process)
+    (delete-process tp--process)
     (delete `(,tp--file-path) tp--active-buffers)
     (if (eq '() tp--active-buffers)
 	(kill-buffer tp--ws-buffer)
@@ -344,8 +344,7 @@ str should be either \"tp--control-host\" or \"tp--static-host\"."
 	 (json-encode `(("event" . "updateMemoryFiles")
 			("files"  (,tp--file-path
 				   . ,(tp--stringify-buffer)
-				   ))))))    ;; (message "Content from tp--send-buffer: %s" content)
-    
+				   ))))))    ;; (message "Content from tp--send-buffer: %s" content)    
     (websocket-send-text tp--control-socket content)
     ))
 

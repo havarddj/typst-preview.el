@@ -49,6 +49,12 @@ Or, if you use `use-package`, try:
   :load-path "path-to-typst-preview.el")
 ```
 
+If you use `doom`, try:
+
+``` el
+(package! typst-preview
+  :recipe (:host github :repo "havarddj/typst-preview.el"))
+```
 
 # Usage and configuration
 
@@ -90,7 +96,37 @@ few things:
 -   Adds a hook to `after-change-functions` which sends the buffer to
     the server at each keystroke.
 
-## License:
+## Advanced configuration
+
+Here is a sample configuration using `use-package` which includes `typst-ts-mode` and `typst-lsp`. 
+
+``` el
+(use-package websocket)
+(use-package typst-preview
+  :load-path "directory-of-typst-preview.el"
+  :config
+  (setq typst-preview-browser "default")
+  (define-key typst-preview-mode-map (kbd "C-c C-j") 'typst-preview-send-position)
+  )
+
+(use-package typst-ts-mode
+  :load-path "directory-of-typst-ts-mode.el"
+  :custom
+  (typst-ts-mode-watch-options "--open")
+  :config
+  ;; make sure to install typst-lsp from
+  ;; https://github.com/nvarner/typst-lsp/releases/tag/v0.12.1
+  (add-to-list 'lsp-language-id-configuration '(typst-ts-mode . "typst"))
+  (lsp-register-client
+   (make-lsp-client
+    :new-connection (lsp-stdio-connection "typst-lsp")
+    :major-modes '(typst-ts-mode)
+    :server-id 'typst-lsp))
+  )
+```
+
+
+# License:
 This project is licensed under the GPL License - see the LICENSE.md file for details
 
 
@@ -107,3 +143,6 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 -   [x] Migrate to README.md
 -   [x] Add screencast
 -   [ ] Add outline functionality
+-   [ ] Ensure that slides work properly
+-   [x] Put sample config with typst-lsp and typst-ts-mode in configuration sample
+-   [x] Fix stop-process issue
