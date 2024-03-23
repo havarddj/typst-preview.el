@@ -68,7 +68,3 @@ Enabling `typst-preview-mode` runs `typst-preview-start`, which does a few thing
 - Connects to the `typst-preview` server using `websocket`
 - Opens a browser pointing at the address of the preview
 - Adds a hook to `after-change-functions` which sends the buffer to the server at each keystroke. 
-
-
-
-
