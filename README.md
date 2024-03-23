@@ -33,8 +33,7 @@ it\'s in your \$PATH. To test this, create test.typ and run
 typst-preview test.typ
 ```
 
-Then put `typst-preview.el` in your load-path, and put this in your init
-file:
+Then put `typst-preview.el` in your load-path, make sure `websocket` is installed, and put this in your init file:
 
 ```el
 (require 'typst-preview)
@@ -45,7 +44,6 @@ Or, if you use `use-package`, try:
 ```el
 (use-package websocket)
 (use-package typst-preview
-  :straight nil             ; if you use straight
   :load-path "path-to-typst-preview.el")
 ```
 
@@ -71,6 +69,8 @@ Jumping from source to preview: `M-x typst-preview-send-position`. This
 only works in text (i.e. not in a code block, say in math mode) because
 of how the typst compiler works. See
 <https://github.com/Enter-tainer/typst-preview/issues/182.jk>
+
+Jumping to preview in Firefox currently doesn't work due to [a bug](https://github.com/havarddj/typst-preview.el/issues/2) in `typst-preview`. Until this is fixed, I recommend using `xwidget` or a different browser.
 
 ## Change default browser
 
