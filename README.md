@@ -58,7 +58,7 @@ If you use `doom`, try:
 
 ## Basic usage
 
-Inside a .typ-file, run `M-x typst-preview-mode`. It will prompt you to set a master file, which by default is the file you are currently editing. This is useful if you have a file which links to other files using `#includez`. Then it starts a preview in your default browser, and connects the source buffer to the server, sending live updates. 
+Inside a .typ-file, run `M-x typst-preview-mode`. It will prompt you to set a master file, which by default is the file you are currently editing. This is useful if you have a file which links to other files using `#include`. Then it starts a preview in your default browser, and connects the source buffer to the server, sending live updates. 
 
 Start, stop and restart `typst-preview` using `M-x typst-preview-start`,
 `M-x typst-preview-stop` and `M-x typst-preview-restart`.
