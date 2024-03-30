@@ -58,9 +58,7 @@ If you use `doom`, try:
 
 ## Basic usage
 
-Inside a .typ-file, run `M-x typst-preview-mode`. This will start a
-preview in your default browser, and connect the source buffer to the
-server, sending live updates.
+Inside a .typ-file, run `M-x typst-preview-mode`. It will prompt you to set a master file, which by default is the file you are currently editing. This is useful if you have a file which links to other files using `#includez`. Then it starts a preview in your default browser, and connects the source buffer to the server, sending live updates. 
 
 Start, stop and restart `typst-preview` using `M-x typst-preview-start`,
 `M-x typst-preview-stop` and `M-x typst-preview-restart`.
@@ -89,10 +87,11 @@ To preview the .typ file in a non-default browser, you can set `typst-preview-br
 Enabling `typst-preview-mode` runs `typst-preview-start`, which does a
 few things:
 
--   Starts `typst-preview` on the current file, sending results to the
-    buffer `*ws-typst-server*`.
--   Connects to the `typst-preview` server using `websocket`
--   Opens a browser pointing at the address of the preview
+-   Asks for a master file, and if there is a preview process with same master, attaches the current file to that process. Otherwise it will: 
+    -   Start `typst-preview` on the current file, sending results to the
+        buffer `*ws-typst-server*`.
+    -   Connect to the `typst-preview` server using `websocket`.
+-   Then it opens a browser pointing at the address of the preview, and 
 -   Adds a hook to `after-change-functions` which sends the buffer to
     the server at each keystroke.
 
@@ -115,7 +114,7 @@ Here is a sample configuration using `use-package` which includes `typst-ts-mode
   (typst-ts-mode-watch-options "--open")
   :config
   ;; make sure to install typst-lsp from
-  ;; https://github.com/nvarner/typst-lsp/releases/tag/v0.12.1
+  ;; https://github.com/nvarner/typst-lsp/releases
   (add-to-list 'lsp-language-id-configuration '(typst-ts-mode . "typst"))
   (lsp-register-client
    (make-lsp-client
@@ -134,7 +133,7 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 
 -   [x] Open browsers in linux/windows, not just MacOS
 -   [x] Ensure that opening several .typ instances works
--   [ ] Clean up typst-preview-start and fix the xwidget hack
+-   [x] Clean up typst-preview-start
 -   [x] Add license
 -   [ ] Fix \"revert buffer makes typst restart\" - should be enough to
     look for existing instance. Does reverting reset buffer-local

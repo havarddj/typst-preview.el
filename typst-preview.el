@@ -98,6 +98,12 @@
 (defvar typst-preview-center-src t
   "If non-NIL, center typst preview source buffer when jumping to source")
 
+(cl-defstruct tp--master
+  path process children socket static-host control-host)
+
+(defvar tp--active-masters '()
+  "list of active typst-preview masters")
+
 ;;;;; Keymaps
 
 ;; This technique makes it easier and less verbose to define keymaps
@@ -138,6 +144,8 @@
 
 ;; this is probably not the right way to do it but eh
 (make-variable-buffer-local 'tp--file)
+(make-variable-buffer-local 'tp--master-file)
+(make-variable-buffer-local 'tp--local-master)
 (make-variable-buffer-local 'tp--file-path)
 (make-variable-buffer-local 'tp--control-socket)
 (make-variable-buffer-local 'tp--control-host)
@@ -153,35 +161,79 @@
     ;; these are buffer-local
     (setq tp--file (buffer-name))
     (setq tp--file-path (buffer-file-name))
-    (setq tp--preview-dir (file-name-directory tp--file-path))
+
     (setq tp--ws-buffer (get-buffer-create "*ws-typst-server*"))
+
+    (setq tp--master-file
+	  (expand-file-name
+	   (read-file-name (format "Master file (default: %s): " tp--file) nil tp--file)))
+    (setq tp--preview-dir (file-name-directory tp--master-file))
+
+    (cl-loop for master in tp--active-masters
+	     if (string-equal tp--master-file (tp--master-path master))
+	     do
+	       (message "Found active master: %S" master)
+	       (push tp--file-path (tp--master-children master))
+	       (setq tp--local-master master)
+	       (setq tp--process (tp--master-process master))
+	       (setq tp--control-socket (tp--master-socket master))
+	       (setq tp--control-host (tp--master-control-host master))
+	       (setq tp--static-host (tp--master-static-host master))
+	       (message "Set local master: %s" tp--local-master)
+	       
+	     )
+	     
+    (unless tp--local-master
+      
+      (setq tp--process (start-process "typst-preview-proc" tp--ws-buffer
+				       "typst-preview" "--partial-rendering" "--no-open"
+				       "--host" typst-preview-host
+				       "--control-plane-host"  "127.0.0.1:0"
+				       "--data-plane-host"  "127.0.0.1:0"
+				       "--root" tp--preview-dir
+				       tp--master-file))
+      (message "started tp--process")
+
+      (sleep-for 1) ;; just for testing!
+
+      (message "opening websocket")
+      ;; find typst-preview tp--control-host address from tp--ws-buffer
+
+      (setq tp--control-host (tp--find-server-address "Control plane"))
+      (setq tp--static-host (tp--find-server-address "Static file"))
+      ;; (setq data-host (tp--find-server-address "Data plane"))
+      (message "Control host: %S \n Static host: %S" tp--control-host tp--static-host)
+      ;; connect to typst-preview socket
+      (setq tp--control-socket
+	    (websocket-open (concat "ws://" tp--control-host)
+			    :on-message (lambda (_websocket frame) (tp--parse-message _websocket frame))
+			    ;; :on-close (lambda (_websocket) (message "websocket closed")
+			    ;; 		(kill-buffer tp--ws-buffer)
+			    ;; 		)
+			    )
+	    )
+      
+      
+      (message "Master not defined, setting new master with path %S" tp--master-file)
+      
+
+      (setq tp--local-master
+	    (make-tp--master
+	     :path tp--master-file
+	     :process tp--process
+	     :children (list tp--file-path)
+	     :socket tp--control-socket
+	     :static-host tp--static-host
+	     :control-host tp--control-host
+	     )
+	    )
+      (push tp--local-master tp--active-masters)
+      )
+
     
-    (setq tp--process (start-process "typst-preview-proc" tp--ws-buffer
-		   "typst-preview" "--partial-rendering" "--no-open"
-		   "--host" typst-preview-host
-		   "--control-plane-host"  "127.0.0.1:0"
-		   "--data-plane-host"  "127.0.0.1:0"
-		   "--root" tp--preview-dir
-		   tp--file-path))
-    
-    (sleep-for 1) ;; just for testing!
 
 
-    ;; find typst-preview tp--control-host address from tp--ws-buffer
-    (setq tp--control-host (tp--find-server-address "Control plane"))
-    (setq tp--static-host (tp--find-server-address "Static file"))
-    ;; (setq data-host (tp--find-server-address "Data plane"))
-    (message "Control host: %S \n Static host: %S" tp--control-host tp--static-host)
-    ;; connect to typst-preview socket
-    (setq tp--control-socket
-	  (websocket-open (concat "ws://" tp--control-host)
-			  :on-message (lambda (_websocket frame) (tp--parse-message _websocket frame))
-			  :on-close (lambda (_websocket) (message "websocket closed")
-				      (kill-buffer tp--ws-buffer)
-				      )))
-
-
-    (typst-preview-sync-memory)
+    ;; (typst-preview-sync-memory)
     ;; add hook to update on change
     ;; (sleep-for 2)
 
@@ -204,19 +256,26 @@
   (and
    (boundp 'tp--control-socket)
    (websocket-openp tp--control-socket)
-   (process-live-p tp--process)))
+   (process-live-p tp--process)
+   (member tp--file-path (tp--master-children tp--local-master))))
 
 (defun typst-preview-stop ()
   "Stop typst-preview buffer by killing websocket connection"
   (interactive)
   (if (not (typst-preview-connected-p))
       (message "No active typst preview in this buffer")
-    (delete-process tp--process)
-    (delete `(,tp--file-path) tp--active-buffers)
-    (if (eq '() tp--active-buffers)
-	(kill-buffer tp--ws-buffer)
-      )
-    )
+
+    (if (not (eq (length (tp--master-children tp--local-master)) 1))
+	(setf (tp--master-children tp--local-master)
+	      (delete tp--file-path (tp--master-children tp--local-master)))
+
+      (delete-process tp--process)
+      (delete (list tp--file-path) tp--active-buffers)
+      (setf tp--active-masters (delete tp--local-master tp--active-masters))
+      (if (eq '() tp--active-masters)
+	  (kill-buffer tp--ws-buffer)
+	)
+      ))
   )
 
 (defun typst-preview-restart ()
@@ -254,11 +313,26 @@
 (defun typst-preview-open-browser ()
   "Open typst-preview browser interactively"
   (interactive)
-  (let* ((browser-list '("default" "xwidget" "safari" "google chrome"))
+  (let* ((browser-list '("default" "xwidget" "safari" "google chrome" "eaf-browser"))
 	 (browser (completing-read "Browser:" browser-list nil nil)))
     (tp--connect-browser browser tp--static-host)
     )
   )
+
+(defun typst-preview-list-active-files ()
+  "List active typst files"
+  (interactive)
+  (let ((str ""))
+    (cl-loop for master in tp--active-masters
+	     do
+	     (setq str (concat str (format "*master:* %s\n"
+					   (tp--master-path master))))
+	     (cl-loop for child in (tp--master-children master)
+		      do
+		      (setq str (concat str (format "|--> %s\n" child))
+			       )))
+    (message str)
+    ))
 ;;;; Functions
 
 ;;;;; Public
@@ -291,14 +365,17 @@
 
 (defun tp--connect-browser (browser hostname)
   "Open browser at websocket URL hostname."
-  (pcase browser
-    ("xwidget" (xwidget-webkit-browse-url (concat "http://" hostname)))
-    ("default" (browse-url (concat "http://" hostname)))
-    (_
-     (let* ((browse-url-generic-program (executable-find browser))
-	    (browse-url-browser-function 'browse-url-generic))
-       (browse-url (concat "http://" hostname)))
-     )
+  (let ((full-url (concat "http://" hostname)))
+    (pcase browser
+      ("xwidget" (xwidget-webkit-browse-url full-url))
+      ("default" (browse-url full-url))
+      ("eaf-browser" (eaf-open-browser-other-window full-url))
+      (_
+       (let* ((browse-url-generic-program (executable-find browser))
+	      (browse-url-browser-function 'browse-url-generic))
+	 (browse-url (concat "http://" hostname)))
+       )
+      )
     )
   )
 
