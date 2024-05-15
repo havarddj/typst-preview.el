@@ -16,7 +16,6 @@ was originally written for VS Code, and also inspired by
 
 https://github.com/havarddj/typst-preview.el/assets/96797844/e44426b2-b404-416e-bb1d-54242f8bb077
 
-
 # Installation
 
 ## MELPA
@@ -67,8 +66,6 @@ Jumping from source to preview: `M-x typst-preview-send-position`. This
 only works in text (i.e. not in a code block, say in math mode) because
 of how the typst compiler works. See
 <https://github.com/Enter-tainer/typst-preview/issues/182.jk>
-
-Jumping to preview in Firefox currently doesn't work due to [a bug](https://github.com/havarddj/typst-preview.el/issues/2) in `typst-preview`. Until this is fixed, I recommend using `xwidget` or a different browser.
 
 ## Change default browser
 
@@ -145,3 +142,9 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 -   [ ] Ensure that slides work properly
 -   [x] Put sample config with typst-lsp and typst-ts-mode in configuration sample
 -   [x] Fix stop-process issue
+-   [ ] Build more robust restart functionality
+-   [ ] Option for pinning main document on a per-file basis
+-   [ ] Add dark mode option
+-   [x] Fix global-minor-mode?
+-   [ ] Clear variables after stopping
+-   [ ] When buffer closed, remove from list of active files

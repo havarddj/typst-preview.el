@@ -93,6 +93,10 @@
 (defvar typst-preview-host "127.0.0.1:0"
   "Default address for typst websocket.")
 
+(defvar typst-preview-invert-colors "auto"
+  "Invert colors in preview. Options: 'never', 'always', 'auto'."
+  )
+
 (defvar tp--active-buffers '()
   "Active typst buffers")
 (defvar typst-preview-center-src t
@@ -130,7 +134,7 @@
 (define-minor-mode typst-preview-mode
   "Toggle typst-preview minor mode"
   nil
-  :global t
+  :global nil
 
   (if typst-preview-mode
       (progn
@@ -191,6 +195,7 @@
 				       "--control-plane-host"  "127.0.0.1:0"
 				       "--data-plane-host"  "127.0.0.1:0"
 				       "--root" tp--preview-dir
+				       "--invert-colors" typst-preview-invert-colors
 				       tp--master-file))
       (message "started tp--process")
 
