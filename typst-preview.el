@@ -27,6 +27,7 @@
 
 ;; This package implements live typst preview using
 ;; https://github.com/Enter-tainer/typst-preview
+;; or https://github.com/Myriad-Dreamin/tinymist
 
 ;;;; Installation
 
@@ -108,6 +109,9 @@
 (defvar tp--active-masters '()
   "list of active typst-preview masters")
 
+(defvar typst-preview-ask-if-pin-main t
+  "if non-NIL, ask if main file should be saved as commented file variable")
+
 ;;;;; Keymaps
 
 ;; This technique makes it easier and less verbose to define keymaps
@@ -168,9 +172,17 @@
 
     (setq tp--ws-buffer (get-buffer-create "*ws-typst-server*"))
 
-    (setq tp--master-file
+    (unless tp--master-file
+     (setq tp--master-file
 	  (expand-file-name
-	   (read-file-name (format "Master file (default: %s): " tp--file) nil tp--file)))
+	   (read-file-name (format "Master file (default: %s): " tp--file) nil tp--file))
+	  )
+     (if (and typst-preview-ask-if-pin-main
+	      (y-or-n-p "Save master file as local variable?"))
+	 (add-file-local-variable 'tp--master-file tp--master-file)
+     )
+    )
+    
     (setq tp--preview-dir (file-name-directory tp--master-file))
 
     (cl-loop for master in tp--active-masters
@@ -273,7 +285,6 @@
     (if (not (eq (length (tp--master-children tp--local-master)) 1))
 	(setf (tp--master-children tp--local-master)
 	      (delete tp--file-path (tp--master-children tp--local-master)))
-
       (delete-process tp--process)
       (delete (list tp--file-path) tp--active-buffers)
       (setf tp--active-masters (delete tp--local-master tp--active-masters))
@@ -338,6 +349,13 @@
 			       )))
     (message str)
     ))
+
+(defun typst-preview-clear-active-files ()
+  "Clear all active typst files"
+  (interactive)
+  (setq tp--active-masters '())
+    )
+
 ;;;; Functions
 
 ;;;;; Public

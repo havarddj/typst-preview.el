@@ -128,23 +128,32 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 
 # Todos:
 
+-   [ ] Fix \"revert buffer makes typst restart\" - should be enough to
+    look for existing instance. Does reverting reset buffer-local
+    variables?
+-   [ ] Add outline functionality
+-   [ ] Ensure that slides work properly
+-   [ ] Build more robust restart functionality
+  + [ ] add buffer-kill hook
+  + [ ] Clear variables after stopping
+  + [ ] When buffer closed, remove from list of active files
+-   [ ] Sync memory files on save
+-   [ ] Solve some out of bounds problem?
+
+-   [x] Option for pinning main document on a per-file basis
+	+ [x] respect file variable set in first line
+	+ [x] option to set file variable in beginning of file
+	+ [ ] Fix weird startup thing
+
 -   [x] Open browsers in linux/windows, not just MacOS
 -   [x] Ensure that opening several .typ instances works
 -   [x] Clean up typst-preview-start
 -   [x] Add license
--   [ ] Fix \"revert buffer makes typst restart\" - should be enough to
-    look for existing instance. Does reverting reset buffer-local
-    variables?
+-   [x] Put sample config with typst-lsp and typst-ts-mode in configuration sample
+-   [x] Fix stop-process issue
 -   [x] Optionally centre buffer on preview-to-source
 -   [x] Migrate to README.md
 -   [x] Add screencast
--   [ ] Add outline functionality
--   [ ] Ensure that slides work properly
--   [x] Put sample config with typst-lsp and typst-ts-mode in configuration sample
--   [x] Fix stop-process issue
--   [ ] Build more robust restart functionality
--   [ ] Option for pinning main document on a per-file basis
--   [ ] Add dark mode option
+-   [x] Add dark mode option
 -   [x] Fix global-minor-mode?
--   [ ] Clear variables after stopping
--   [ ] When buffer closed, remove from list of active files
+	
