@@ -98,6 +98,10 @@
   "Invert colors in preview. Options: 'never', 'always', 'auto'."
   )
 
+(defvar typst-preview-executable "tinymist preview" 
+  "Program for running typst preview. Options: 'typst-preview', 'tinymist preview'."
+  )
+
 (defvar tp--active-buffers '()
   "Active typst buffers")
 (defvar typst-preview-center-src t
@@ -153,6 +157,8 @@
 ;; this is probably not the right way to do it but eh
 (make-variable-buffer-local 'tp--file)
 (make-variable-buffer-local 'tp--master-file)
+;; stop emacs from complaining about unsafe buffer local variables
+(put 'tp--master-file 'safe-local-variable #'stringp)
 (make-variable-buffer-local 'tp--local-master)
 (make-variable-buffer-local 'tp--file-path)
 (make-variable-buffer-local 'tp--control-socket)
@@ -200,15 +206,26 @@
 	     )
 	     
     (unless tp--local-master
-      
-      (setq tp--process (start-process "typst-preview-proc" tp--ws-buffer
-				       "typst-preview" "--partial-rendering" "--no-open"
-				       "--host" typst-preview-host
-				       "--control-plane-host"  "127.0.0.1:0"
-				       "--data-plane-host"  "127.0.0.1:0"
-				       "--root" tp--preview-dir
-				       "--invert-colors" typst-preview-invert-colors
-				       tp--master-file))
+      (if (eq typst-preview-executable "tinymist preview")
+	  (setq tp--process (start-process "typst-preview-proc" tp--ws-buffer
+					   "tinymist" "preview" "--partial-rendering" "--no-open"
+					   "--host" typst-preview-host
+					   "--control-plane-host"  "127.0.0.1:0"
+					   "--data-plane-host"  "127.0.0.1:0"
+					   "--root" tp--preview-dir
+					   "--invert-colors" typst-preview-invert-colors
+					   tp--master-file))
+	(setq tp--process (start-process "typst-preview-proc" tp--ws-buffer
+					 "typst-preview" "--partial-rendering" "--no-open"
+					   "--host" typst-preview-host
+					   "--control-plane-host"  "127.0.0.1:0"
+					   "--data-plane-host"  "127.0.0.1:0"
+					   "--root" tp--preview-dir
+					   "--invert-colors" typst-preview-invert-colors
+					   tp--master-file)
+	      )
+	)     
+
       (message "started tp--process")
 
       (sleep-for 1) ;; just for testing!
@@ -374,8 +391,9 @@
     ;; (message "typst preview file: %s" tp--file)
     (pcase event
       ("editorScrollTo"
-       (let ((buffer (car (last (split-string (gethash "filepath" msg) "/")))))
-	 (tp--goto-buffer-position buffer (gethash "start" msg))))
+       (let ((file-name (gethash "filepath" msg)))
+	 (tp--goto-file-position file-name (gethash "start" msg))
+	 ))
       ("compileStatus"
        (if (string= "CompileError" (gethash "kind" msg))
 	   (message "Compile error")
@@ -420,10 +438,11 @@ str should be either \"tp--control-host\" or \"tp--static-host\"."
        (vector (line-number-at-pos) (current-column)))
 			  
 
-(defun tp--goto-buffer-position (buffer-name vec)
-  "Go to a specific position vec = (line, column) in the specified buffer."
-  (message "Going to %s in %s" vec buffer-name)
-  (pop-to-buffer buffer-name)
+(defun tp--goto-file-position (file-name vec)
+  "Go to a specific position vec = (line, column) in the specified file."
+  (message "Going to %s in %s" vec file-name)
+  (pop-to-buffer (find-file file-name))
+  
     (goto-char (point-min))
     (forward-line (aref vec 0))
     (forward-char (aref vec 1))

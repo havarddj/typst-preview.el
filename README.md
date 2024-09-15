@@ -25,11 +25,22 @@ Currently not on Melpa
 ## Manual installation
 
 Install the typst-preview binary from
-<https://github.com/Enter-tainer/typst-preview/releases> and make sure
+<https://github.com/Myriad-Dreamin/tinymist> and make sure
 it\'s in your \$PATH. To test this, create test.typ and run
 
 ```sh
+tinymist preview test.typ
+```
+
+It is also possible to use the old `typst-preview`, found at <https://github.com/Enter-tainer/typst-preview/releases>. Run
+
+``` sh
 typst-preview test.typ
+```
+to test it. Since `typst-preview` has been deprecated in favour of `tinymist preview`, the latter is the new default. You can change back to `typst-preview` using 
+
+``` el
+(setq typst-preview-executable "typst-preview")
 ```
 
 Then put `typst-preview.el` in your load-path, make sure `websocket` is installed, and put this in your init file:
@@ -60,12 +71,7 @@ If you use `doom`, try:
 Inside a .typ-file, run `M-x typst-preview-mode`. It will prompt you to set a master file, which by default is the file you are currently editing. This is useful if you have a file which links to other files using `#include`. Then it starts a preview in your default browser, and connects the source buffer to the server, sending live updates. 
 
 Start, stop and restart `typst-preview` using `M-x typst-preview-start`,
-`M-x typst-preview-stop` and `M-x typst-preview-restart`.
-
-Jumping from source to preview: `M-x typst-preview-send-position`. This
-only works in text (i.e. not in a code block, say in math mode) because
-of how the typst compiler works. See
-<https://github.com/Enter-tainer/typst-preview/issues/182.jk>
+`M-x typst-preview-stop` and `M-x typst-preview-restart`. Jumping from source to preview: `M-x typst-preview-send-position`. 
 
 ## Change default browser
 
@@ -112,6 +118,7 @@ Here is a sample configuration using `use-package` which includes `typst-ts-mode
   :config
   ;; make sure to install typst-lsp from
   ;; https://github.com/nvarner/typst-lsp/releases
+  ;; or use tinymist
   (add-to-list 'lsp-language-id-configuration '(typst-ts-mode . "typst"))
   (lsp-register-client
    (make-lsp-client
@@ -127,23 +134,24 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 
 
 # Todos:
-
+-   [x] Make compatible with tinymist in addition to typst-preview
 -   [ ] Fix \"revert buffer makes typst restart\" - should be enough to
     look for existing instance. Does reverting reset buffer-local
     variables?
--   [ ] Add outline functionality
+-   [ ] Add outline functionality (NB: this might come for free from tinymist?)
 -   [ ] Ensure that slides work properly
 -   [ ] Build more robust restart functionality
   + [ ] add buffer-kill hook
   + [ ] Clear variables after stopping
   + [ ] When buffer closed, remove from list of active files
 -   [ ] Sync memory files on save
--   [ ] Solve some out of bounds problem?
+-   [ ] Solve some out of bounds problem? (jump to source on certain symbols)
+-   [ ] Don't start processes on startup? Or at least don't open windows
+-   [ ] Refresh local variables of connected files when running clear-active-files
 
 -   [x] Option for pinning main document on a per-file basis
 	+ [x] respect file variable set in first line
 	+ [x] option to set file variable in beginning of file
-	+ [ ] Fix weird startup thing
 
 -   [x] Open browsers in linux/windows, not just MacOS
 -   [x] Ensure that opening several .typ instances works
@@ -156,4 +164,4 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 -   [x] Add screencast
 -   [x] Add dark mode option
 -   [x] Fix global-minor-mode?
-	
+
