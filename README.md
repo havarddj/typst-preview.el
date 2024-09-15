@@ -24,7 +24,7 @@ Currently not on Melpa
 
 ## Manual installation
 
-Install the typst-preview binary from
+Install a `tinymist` binary from
 <https://github.com/Myriad-Dreamin/tinymist> and make sure
 it\'s in your \$PATH. To test this, create test.typ and run
 
