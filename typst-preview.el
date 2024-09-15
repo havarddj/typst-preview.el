@@ -206,7 +206,7 @@
 	     )
 	     
     (unless tp--local-master
-      (if (eq typst-preview-executable "tinymist preview")
+      (if (string= typst-preview-executable "tinymist preview")
 	  (setq tp--process (start-process "typst-preview-proc" tp--ws-buffer
 					   "tinymist" "preview" "--partial-rendering" "--no-open"
 					   "--host" typst-preview-host
