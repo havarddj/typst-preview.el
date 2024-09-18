@@ -79,19 +79,23 @@
 (defcustom typst-preview-browser "default"
   "Default browser for previewing Typst files.
 Options: \"xwidget\",\"safari\", or \"default\"."
-  :type 'string)
+  :type 'string
+  :group 'typst-preview)
 
 (defcustom typst-preview-invert-colors "auto"
   "Invert colors in preview. Options: 'never', 'always', 'auto'."
-  :type 'string)
+  :type 'string
+  :group 'typst-preview)
 
 (defcustom typst-preview-executable "tinymist preview"
   "Program for running typst preview. Options: 'typst-preview', 'tinymist preview'."
-  :type 'string)
+  :type 'string
+  :group 'typst-preview)
 
 (defcustom typst-preview-ask-if-pin-main t
   "If non-NIL, ask if main file should be saved as commented file variable."
-  :type 'boolean)
+  :type 'boolean
+  :group 'typst-preview)
 
 (defcustom typst-preview-start-subfile-preview-automatically t
   "If non-NIL, start `typst-preview-mode' automatically in subfiles.
@@ -99,19 +103,23 @@ More precisely, when prompted from a previewed file to jump to a buffer
 currently not running typst-preview, activate `typst-preview-mode' and
 add buffer to children of the relevant master.
 This is intended for multi-file projects where a file is included using e.g. #include."
-  :type 'boolean)
+  :type 'boolean
+  :group 'typst-preview)
 
 (defcustom typst-preview-open-browser-automatically t
   "If non-NIL, open browser automatically when `typst-preview-start' is run."
-  :type 'boolean)
+  :type 'boolean
+  :group 'typst-preview)
 
 (defcustom typst-preview-autostart t
   "If non-NIL, start typst preview automatically when `typst-preview-mode' is activated."
-  :type 'boolean)
+  :type 'boolean
+  :group 'typst-preview)
 
 (defcustom typst-preview-center-src t
   "If non-NIL, center typst preview source buffer when jumping to source."
-  :type 'boolean)
+  :type 'boolean
+  :group 'typst-preview)
 
 (defvar typst-preview-host "127.0.0.1:0"
   "Default address for typst websocket.")
@@ -151,7 +159,8 @@ This is intended for multi-file projects where a file is included using e.g. #in
 ;;;###autoload
 (define-minor-mode typst-preview-mode
   "Toggle typst-preview minor mode."
-  nil
+  :init nil
+  :lighter "typst-preview"
   :global nil
 
   (if typst-preview-mode

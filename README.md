@@ -140,13 +140,13 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
     variables?
 -   [ ] Add outline functionality (NB: this might come for free from tinymist?)
 -   [ ] Ensure that slides work properly
--   [ ] Build more robust restart functionality
-  + [ ] add buffer-kill hook
-  + [ ] Clear variables after stopping
-  + [ ] When buffer closed, remove from list of active files
+-   [x] Build more robust restart functionality
+  + [x] add buffer-kill hook
+  + [x] Clear variables after stopping
+  + [x] When buffer closed, remove from list of active files
 -   [ ] Sync memory files on save
 -   [ ] Solve some out of bounds problem? (jump to source on certain symbols)
--   [ ] Don't start processes on startup? Or at least don't open windows
+-   [x] Don't start processes on startup? Or at least don't open windows
 -   [ ] Refresh local variables of connected files when running clear-active-files
 
 -   [x] Option for pinning main document on a per-file basis
