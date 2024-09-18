@@ -9,11 +9,14 @@
 
 Live preview of typst files inside emacs! Building on #link("https://github.com/Enter-tainer/typst-preview")[typst-preview], which was originally written for VS Code, and also inspired by #link("https://github.com/chomosuke/typst-preview.nvim")[typst-preview.nvim].
 
-#align(center)[*Features*:
-- Live preview of edits
-- Source to preview jumping
-- Preview to source jumping]
-
+#align(center+horizon)[
+    #box(width: 5cm,
+	[#align(center)[*Features*:]
+	    #align(left)[
+		- Live preview of edits
+		- Source to preview jumping
+		- Preview to source jumping]]
+)]
 = Installation
 
 == MELPA
@@ -68,3 +71,7 @@ Enabling `typst-preview-mode` runs `typst-preview-start`, which does a few thing
 - Connects to the `typst-preview` server using `websocket`
 - Opens a browser pointing at the address of the preview
 - Adds a hook to `after-change-functions` which sends the buffer to the server at each keystroke. 
+
+
+== Including files:
+#include("test-include.typ")
