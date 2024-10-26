@@ -134,6 +134,8 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 
 
 # Todos:
+-   [ ] Find a better way to get name of static-host _without_ searching websocket buffer
+-   [ ] Make sure we can have multiple files with same name (which emacs distinguishes with "filename.typ<dir>")
 -   [x] Make compatible with tinymist in addition to typst-preview
 -   [ ] Fix \"revert buffer makes typst restart\" - should be enough to
     look for existing instance. Does reverting reset buffer-local
@@ -148,7 +150,6 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 -   [ ] Solve some out of bounds problem? (jump to source on certain symbols)
 -   [x] Don't start processes on startup? Or at least don't open windows
 -   [ ] Refresh local variables of connected files when running clear-active-files
-
 -   [x] Option for pinning main document on a per-file basis
 	+ [x] respect file variable set in first line
 	+ [x] option to set file variable in beginning of file
@@ -164,4 +165,5 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 -   [x] Add screencast
 -   [x] Add dark mode option
 -   [x] Fix global-minor-mode?
+-   [ ] Get rid of annoying 'No active typst-preview'-message
 
