@@ -254,7 +254,8 @@ typst-preview, or modify `typst-preview-executable'"))
       (message "Opening websocket.")
       ;; find typst-preview tp--control-host address from tp--ws-buffer
 
-      (setq tp--control-host (tp--find-server-address "Control panel"))
+      ;; This is to account for a name change in tinymist, for backwards compatibility
+      (setq tp--control-host (tp--find-server-address "Control \\(panel\\|plane\\)"))
       (setq tp--static-host (tp--find-server-address "Static file"))
 
       (message "Control host: %S \n Static host: %S" tp--control-host tp--static-host)
@@ -430,12 +431,12 @@ typst-preview, or modify `typst-preview-executable'"))
 
 
 (defun tp--find-server-address (str)
-  "Find server address for typst-preview: `STR' should be either `tp--control-host' or `tp--static-host'."
+  "Find server address for typst-preview: `STR' should be either 'Control panel' or 'Static file'."
   (interactive)
   (with-current-buffer tp--ws-buffer
     (save-excursion
       (end-of-buffer)
-      (search-backward (concat str " server listening on:") nil)
+      (search-backward-regexp (concat str " server listening on:") nil)
       (car (last (split-string (thing-at-point 'line 'no-properties)))))))
 
 (defun tp--get-buffer-position ()
