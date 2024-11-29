@@ -142,6 +142,7 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
     variables?
 -   [ ] Add outline functionality (NB: this might come for free from tinymist?)
 -   [ ] Ensure that slides work properly
+-   [ ] Make typst-preview-start enable typst-preview-mode if not active
 -   [x] Build more robust restart functionality
   + [x] add buffer-kill hook
   + [x] Clear variables after stopping
@@ -165,5 +166,5 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 -   [x] Add screencast
 -   [x] Add dark mode option
 -   [x] Fix global-minor-mode?
--   [ ] Get rid of annoying 'No active typst-preview'-message
+-   [x] Get rid of annoying 'No active typst-preview'-message
 

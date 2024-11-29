@@ -120,8 +120,12 @@ This is intended for multi-file projects where a file is included using e.g. #in
   "If non-NIL, center typst preview source buffer when jumping to
   source." :type 'boolean :group 'typst-preview)
 
-(defvar typst-preview-host "127.0.0.1:0" "Default address for typst
-  websocket.")
+(defvar typst-preview-host "127.0.0.1:0"
+  "Default address for typst websocket.")
+
+(defvar typst-preview-default-dir ""
+  "Default directory for tinymist preview.
+Should only be used as directory-local or buffer-local variable.")
 
 ;; PRIVATE
 
@@ -216,8 +220,11 @@ typst-preview, or modify `typst-preview-executable'"))
       (if (and typst-preview-ask-if-pin-main
 	       (y-or-n-p "Save master file as local variable?"))
 	  (add-file-local-variable 'tp--master-file tp--master-file)))
-    
-    (setq tp--preview-dir (file-name-directory tp--master-file))
+
+    (setq tp--preview-dir
+	  (if (string= typst-preview-default-dir "")
+	      (file-name-directory tp--master-file)
+	    (typst-preview-default-dir)))
 
     (cl-loop for master in tp--active-masters
 	     if (string-equal tp--master-file (tp--master-path master))
