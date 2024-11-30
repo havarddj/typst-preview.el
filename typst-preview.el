@@ -224,7 +224,7 @@ typst-preview, or modify `typst-preview-executable'"))
     (setq tp--preview-dir
 	  (if (string= typst-preview-default-dir "")
 	      (file-name-directory tp--master-file)
-	    (typst-preview-default-dir)))
+	    typst-preview-default-dir))
 
     (cl-loop for master in tp--active-masters
 	     if (string-equal tp--master-file (tp--master-path master))
