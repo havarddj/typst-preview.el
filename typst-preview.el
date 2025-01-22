@@ -164,7 +164,7 @@ This is intended for multi-file projects where a file is included using e.g. #in
   (if typst-preview-mode
       (if typst-preview-autostart
 	  (progn
-	    (typst-preview-start)
+	    (typst-preview-start typst-preview-open-browser-automatically)
 	    (message "Typst preview started!"))
 	(message "Typst-preview-mode enabled, run `typst-preview-start' to start preview"))
     (remove-hook 'after-change-functions #'tp--send-buffer-on-type t))
@@ -194,9 +194,6 @@ This is intended for multi-file projects where a file is included using e.g. #in
 
 If `OPEN-BROWSER' set and non-NIL, then it will automatically open a default browser window."
   (interactive)
-
-  (unless (boundp open-browser)
-    (setq open-browser typst-preview-open-browser-automatically))
 
   (unless (executable-find (car (split-string typst-preview-executable)))
     (error "Typst-preview executable not found. Please install tinymist or
