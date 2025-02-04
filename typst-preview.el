@@ -444,7 +444,9 @@ typst-preview, or modify `typst-preview-executable'"))
 (defun tp--goto-file-position (file-name vec)
   "Go to a specific position `VEC' = (line, column) in file `FILE-NAME'."
   (message "Going to %s in %s" vec file-name)
-  (pop-to-buffer (find-file file-name))
+  (if (get-file-buffer file-name)
+      (pop-to-buffer (get-file-buffer file-name))
+    (find-file file-name))
   
   (goto-char (point-min))
   (forward-line (aref vec 0))
