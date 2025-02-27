@@ -261,6 +261,7 @@ typst-preview, or modify `typst-preview-executable'"))
       ;; connect to typst-preview socket
       (setq tp--control-socket
 	    (websocket-open (concat "ws://" tp--control-host)
+			    :custom-header-alist '(("origin" . "vscode-webview://emacs"))
 			    :on-message (lambda (_websocket frame) (tp--parse-message _websocket frame))
 			    :on-close (lambda (_websocket) (message "Typst-preview-mode websocket closed."))))
       
