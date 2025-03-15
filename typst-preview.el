@@ -158,7 +158,7 @@ This is intended for multi-file projects where a file is included using e.g. #in
 (define-minor-mode typst-preview-mode
   "Toggle typst-preview minor mode."
   :init nil
-  :lighter "typst-preview"
+  :lighter " typst-preview"
   :global nil
 
   (if typst-preview-mode
@@ -167,7 +167,7 @@ This is intended for multi-file projects where a file is included using e.g. #in
 	    (typst-preview-start typst-preview-open-browser-automatically)
 	    (message "Typst preview started!"))
 	(message "Typst-preview-mode enabled, run `typst-preview-start' to start preview"))
-    (remove-hook 'after-change-functions #'tp--send-buffer-on-type t))
+    (typst-preview-stop))
   :key-map typst-preview-mode-map )
 
 
@@ -303,19 +303,19 @@ typst-preview, or modify `typst-preview-executable'"))
 (defun typst-preview-stop ()
   "Stop typst-preview buffer by killing websocket connection."
   (interactive)
-  (when (bound-and-true-p typst-preview-mode)
-    (if (not (typst-preview-connected-p))
-	(message "No active typst preview in this buffer.")
-      (let ((global-master (car (member tp--local-master tp--active-masters))))
-	(if (not (string-equal tp--master-file tp--file-path))
-	    (setf (tp--master-children global-master)
-		  (delete tp--file-path (tp--master-children global-master)))
-	  (delete-process tp--process)
-	  (delete (list tp--file-path) tp--active-buffers)
-	  (setf tp--active-masters (delete tp--local-master tp--active-masters))
-	  (if (eq '() tp--active-masters)
-	      (kill-buffer tp--ws-buffer)))
-	(kill-local-variable 'tp--local-master)))))
+  (if (not (typst-preview-connected-p))
+      (message "No active typst preview in this buffer.")
+    (let ((global-master (car (member tp--local-master tp--active-masters))))
+      (if (not (string-equal tp--master-file tp--file-path))
+	  (setf (tp--master-children global-master)
+		(delete tp--file-path (tp--master-children global-master)))
+	(delete-process tp--process)
+	(delete (list tp--file-path) tp--active-buffers)
+	(setf tp--active-masters (delete tp--local-master tp--active-masters))
+	(if (eq '() tp--active-masters)
+	    (kill-buffer tp--ws-buffer)))
+      (kill-local-variable 'tp--local-master)
+      (remove-hook 'after-change-functions #'tp--send-buffer-on-type t))))
 
 ;;;###autoload
 (defun typst-preview-restart ()
