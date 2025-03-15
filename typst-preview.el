@@ -158,7 +158,7 @@ This is intended for multi-file projects where a file is included using e.g. #in
 (define-minor-mode typst-preview-mode
   "Toggle typst-preview minor mode."
   :init nil
-  :lighter " typst-preview "
+  :lighter " typst-preview"
   :global nil
 
   (if typst-preview-mode
