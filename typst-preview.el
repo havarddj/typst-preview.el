@@ -286,7 +286,7 @@ typst-preview, or modify `typst-preview-executable'"))
       (message "Typst-preview started, navigate to %s in your browser or run `typst-preview-open-browser'." tp--static-host))
     
     (push `(,tp--file-path) tp--active-buffers)
-    (add-hook 'kill-buffer-hook #'typst-preview-stop)
+    (add-hook 'kill-buffer-hook #'typst-preview-stop nil t)
     ))
 
 ;;;###autoload
