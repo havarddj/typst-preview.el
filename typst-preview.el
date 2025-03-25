@@ -258,7 +258,7 @@ typst-preview, or modify `typst-preview-executable'"))
 
       ;; (setq tp--static-host (tp--find-server-address "Static file"))
 
-      (while (not tp--static-host)
+      (while (not tp--control-host)
 	(sleep-for .01))
 
       ;; remove filter to prevent resetting addresses
@@ -451,7 +451,7 @@ typst-preview, or modify `typst-preview-executable'"))
 	  (setq tp--static-host (match-string 1 input)))
 	(let ((data-match (string-match "Data plane server listening on: \\(.+\\)" input)))
 	  (setq tp--control-host (match-string 1 input)))
-	(message "Succesfully filtered process output: %s %s " tp--static-host tp--control-host )
+	(message "Succesfully filtered process output: %s %s " tp--static-host tp--control-host)
 	)))
 
 (defun tp--get-buffer-position ()
