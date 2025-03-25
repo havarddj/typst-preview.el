@@ -166,4 +166,4 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 -   [x] Add dark mode option
 -   [x] Fix global-minor-mode?
 -   [ ] Get rid of annoying 'No active typst-preview'-message
-
+-   [ ] Add example using :vc in use-package
