@@ -280,7 +280,7 @@ typst-preview, or modify `typst-preview-executable'"))
       (add-hook 'after-change-functions
 		#'tp--send-buffer-on-type nil t))
 
-    (if open-browser
+    (if typst-preview-open-browser-automatically
 	(tp--connect-browser typst-preview-browser tp--static-host)
       (message "Typst-preview started, navigate to %s in your browser or run `typst-preview-open-browser'." tp--static-host))
     
@@ -427,16 +427,8 @@ typst-preview, or modify `typst-preview-executable'"))
 	 (browse-url (concat "http://" hostname)))))))
 
 
-(defun tp--find-server-address (str)
-  "Find server address for typst-preview: `STR' should be either 'Control panel' or 'Static file'."
-  (interactive)
-  (with-current-buffer tp--ws-buffer
-    (save-excursion
-      (end-of-buffer)
-      (search-backward-regexp (concat str " server listening on:") nil)
-      (car (last (split-string (thing-at-point 'line 'no-properties)))))))
-
 (defun tp--find-server-filter (proc input)
+  "Filter `PROC' `INPUT' to find static and control host addresses"
   (if (string-match "Static file server listening on: \\(.+\\)" input)
       (setq tp--static-host (match-string 1 input)))
   (if (string-match "Control panel server listening on: \\(.+\\)" input)
