@@ -437,12 +437,10 @@ typst-preview, or modify `typst-preview-executable'"))
       (car (last (split-string (thing-at-point 'line 'no-properties)))))))
 
 (defun tp--find-server-filter (proc input)
-  (progn
-    (message "input is %s" input)
-    (if (string-match "Static file server listening on: \\(.+\\)" input)
-	(setq tp--static-host (match-string 1 input)))
-	(if (string-match "Control panel server listening on: \\(.+\\)" input)
-	    (setq tp--control-host (match-string 1 input)))))
+  (if (string-match "Static file server listening on: \\(.+\\)" input)
+      (setq tp--static-host (match-string 1 input)))
+  (if (string-match "Control panel server listening on: \\(.+\\)" input)
+      (setq tp--control-host (match-string 1 input))))
 
 (defun tp--get-buffer-position ()
   "Get position in buffer as a vector."
