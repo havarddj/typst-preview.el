@@ -1,4 +1,4 @@
-;;; typst-preview.el --- Live preview of typst -*- lexical-binding: nil; -*-
+;;; typst-preview.el --- Live preview of typst -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2023 Håvard Damm-Johnsen
 
@@ -247,22 +247,14 @@ typst-preview, or modify `typst-preview-executable'"))
 					 tp--master-file)))
       (message "Started %S process." typst-preview-executable)
 
-      (set-process-filter tp--process 'tp--find-server-filter)
+      ;; requires lexical scoping!
+      (add-function :before (process-filter tp--process) 'tp--find-server-filter)
 
-      ;; (sleep-for 1) ;; give time for websocket to populate tp--ws-buffer
-      
-      ;; find typst-preview tp--control-host address from tp--ws-buffer
-
-      ;; This is to account for a name change in tinymist, for backwards compatibility
-      ;; (setq tp--control-host (tp--find-server-address "Control \\(panel\\|plane\\)"))
-
-      ;; (setq tp--static-host (tp--find-server-address "Static file"))
-
-      (while (not tp--control-host)
+      (while (or (not tp--control-host) (not tp--static-host))
 	(sleep-for .01))
 
       ;; remove filter to prevent resetting addresses
-      (remove-function (process-filter tp--process) #'tp--find-server-filter)
+      (remove-function (process-filter tp--process) 'tp--find-server-filter)
       
       (message "Starting websocket server")
       ;; connect to typst-preview socket
@@ -445,14 +437,12 @@ typst-preview, or modify `typst-preview-executable'"))
       (car (last (split-string (thing-at-point 'line 'no-properties)))))))
 
 (defun tp--find-server-filter (proc input)
-  (if (string-match-p "file server listening on:" input)
-      (progn
-	(let ((static-match (string-match "Static file server listening on: \\(.+\\)" input)))
-	  (setq tp--static-host (match-string 1 input)))
-	(let ((data-match (string-match "Data plane server listening on: \\(.+\\)" input)))
-	  (setq tp--control-host (match-string 1 input)))
-	(message "Succesfully filtered process output: %s %s " tp--static-host tp--control-host)
-	)))
+  (progn
+    (message "input is %s" input)
+    (if (string-match "Static file server listening on: \\(.+\\)" input)
+	(setq tp--static-host (match-string 1 input)))
+	(if (string-match "Control panel server listening on: \\(.+\\)" input)
+	    (setq tp--control-host (match-string 1 input)))))
 
 (defun tp--get-buffer-position ()
   "Get position in buffer as a vector."
