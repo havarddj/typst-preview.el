@@ -180,6 +180,7 @@ This is intended for multi-file projects where a file is included using e.g. #in
 (make-variable-buffer-local 'tp--file-path)
 (make-variable-buffer-local 'tp--control-socket)
 (make-variable-buffer-local 'tp--control-host)
+(make-variable-buffer-local 'tp--static-host)
 (make-variable-buffer-local 'tp--ws-buffer)
 (make-variable-buffer-local 'tp--process)
 
@@ -246,18 +247,24 @@ typst-preview, or modify `typst-preview-executable'"))
 					 tp--master-file)))
       (message "Started %S process." typst-preview-executable)
 
-      (sleep-for 1) ;; give time for websocket to populate tp--ws-buffer
+      (set-process-filter tp--process 'tp--find-server-filter)
 
-      (message "Opening websocket.")
+      ;; (sleep-for 1) ;; give time for websocket to populate tp--ws-buffer
+      
       ;; find typst-preview tp--control-host address from tp--ws-buffer
 
       ;; This is to account for a name change in tinymist, for backwards compatibility
-      (setq tp--control-host (tp--find-server-address "Control \\(panel\\|plane\\)"))
-      (setq tp--static-host (tp--find-server-address "Static file"))
+      ;; (setq tp--control-host (tp--find-server-address "Control \\(panel\\|plane\\)"))
 
-      (message "Control host: %S \n Static host: %S" tp--control-host tp--static-host)
+      ;; (setq tp--static-host (tp--find-server-address "Static file"))
 
+      (while (not tp--static-host)
+	(sleep-for .01))
+
+      ;; remove filter to prevent resetting addresses
+      (remove-function (process-filter tp--process) #'tp--find-server-filter)
       
+      (message "Starting websocket server")
       ;; connect to typst-preview socket
       (setq tp--control-socket
 	    (websocket-open (concat "ws://" tp--control-host)
@@ -436,6 +443,16 @@ typst-preview, or modify `typst-preview-executable'"))
       (end-of-buffer)
       (search-backward-regexp (concat str " server listening on:") nil)
       (car (last (split-string (thing-at-point 'line 'no-properties)))))))
+
+(defun tp--find-server-filter (proc input)
+  (if (string-match-p "file server listening on:" input)
+      (progn
+	(let ((static-match (string-match "Static file server listening on: \\(.+\\)" input)))
+	  (setq tp--static-host (match-string 1 input)))
+	(let ((data-match (string-match "Data plane server listening on: \\(.+\\)" input)))
+	  (setq tp--control-host (match-string 1 input)))
+	(message "Succesfully filtered process output: %s %s " tp--static-host tp--control-host )
+	)))
 
 (defun tp--get-buffer-position ()
   "Get position in buffer as a vector."
