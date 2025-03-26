@@ -178,11 +178,7 @@ This is intended for multi-file projects where a file is included using e.g. #in
 (put 'tp--master-file 'safe-local-variable #'stringp)
 (make-variable-buffer-local 'tp--local-master)
 (make-variable-buffer-local 'tp--file-path)
-;; (make-variable-buffer-local 'tp--control-socket)
-;; (make-variable-buffer-local 'tp--control-host)
-;; (make-variable-buffer-local 'tp--static-host)
 (make-variable-buffer-local 'tp--ws-buffer)
-;; (make-variable-buffer-local 'tp--process)
 
 
 ;;;; Functions
@@ -267,14 +263,6 @@ typst-preview, or modify `typst-preview-executable'"))
 			    :on-message (lambda (_websocket frame) (tp--parse-message _websocket frame))
 			    :on-close (lambda (_websocket) (message "Typst-preview-mode websocket closed."))))
       (setf (tp--master-children tp--local-master) (list tp--file-path))
-      ;; (setq tp--local-master
-      ;; 	    (make-tp--master
-      ;; 	     :path tp--master-file
-      ;; 	     :process tp--process
-      ;; 	     :children (list tp--file-path)
-      ;; 	     :socket tp--control-socket
-      ;; 	     :static-host tp--static-host
-      ;; 	     :control-host tp--control-host))
       (push tp--local-master tp--active-masters))
 
     (with-current-buffer tp--file
@@ -293,8 +281,6 @@ typst-preview, or modify `typst-preview-executable'"))
   "Return t if websocket is connected to typst-preview server."
   (and
    (bound-and-true-p tp--local-master)
-   ;; (boundp 'tp--control-socket)
-   ;; (websocket-openp tp--control-socket)
    (process-live-p (tp--master-process tp--local-master))
    (member tp--file-path (tp--master-children tp--local-master))))
 
