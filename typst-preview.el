@@ -128,7 +128,7 @@ This is intended for multi-file projects where a file is included using e.g. #in
 (defvar tp--active-buffers '() "Get active typst buffers.")
 
 
-(cl-defstruct tp--master path process children socket static-host
+(cl-defstruct tp--master (path :string) process children socket static-host
   control-host)
 
 (defvar tp--active-masters '() "List of active typst-preview
@@ -178,11 +178,11 @@ This is intended for multi-file projects where a file is included using e.g. #in
 (put 'tp--master-file 'safe-local-variable #'stringp)
 (make-variable-buffer-local 'tp--local-master)
 (make-variable-buffer-local 'tp--file-path)
-(make-variable-buffer-local 'tp--control-socket)
-(make-variable-buffer-local 'tp--control-host)
-(make-variable-buffer-local 'tp--static-host)
+;; (make-variable-buffer-local 'tp--control-socket)
+;; (make-variable-buffer-local 'tp--control-host)
+;; (make-variable-buffer-local 'tp--static-host)
 (make-variable-buffer-local 'tp--ws-buffer)
-(make-variable-buffer-local 'tp--process)
+;; (make-variable-buffer-local 'tp--process)
 
 
 ;;;; Functions
@@ -222,14 +222,14 @@ typst-preview, or modify `typst-preview-executable'"))
 	     do
 	     (push tp--file-path (tp--master-children master))
 	     (setq tp--local-master master)
-	     (setq tp--process (tp--master-process master))
-	     (setq tp--control-socket (tp--master-socket master))
-	     (setq tp--control-host (tp--master-control-host master))
-	     (setq tp--static-host (tp--master-static-host master)))
+	     )
     
     (unless tp--local-master
+      (setq tp--local-master (make-tp--master :path tp--master-file))
+      
       (if (string= typst-preview-executable "tinymist preview")
-	  (setq tp--process (start-process "typst-preview-proc" tp--ws-buffer
+	  (setf (tp--master-process tp--local-master)
+		(start-process "typst-preview-proc" tp--ws-buffer
 					   "tinymist" "preview" "--partial-rendering" "--no-open"
 					   "--host" typst-preview-host
 					   "--control-plane-host"  "127.0.0.1:0"
@@ -237,7 +237,8 @@ typst-preview, or modify `typst-preview-executable'"))
 					   "--root" tp--preview-dir
 					   "--invert-colors" typst-preview-invert-colors
 					   tp--master-file))
-	(setq tp--process (start-process "typst-preview-proc" tp--ws-buffer
+	  (setf (tp--master-process tp--local-master)
+	      (start-process "typst-preview-proc" tp--ws-buffer
 					 "typst-preview" "--partial-rendering" "--no-open"
 					 "--host" typst-preview-host
 					 "--control-plane-host"  "127.0.0.1:0"
@@ -248,32 +249,32 @@ typst-preview, or modify `typst-preview-executable'"))
       (message "Started %S process." typst-preview-executable)
 
       ;; requires lexical scoping!
-      (add-function :before (process-filter tp--process) 'tp--find-server-filter)
-
-      (while (or (not tp--control-host) (not tp--static-host))
+      (add-function :before (process-filter (tp--master-process tp--local-master)) 'tp--find-server-filter)
+      ;; wait until response tp-process to define host addresses
+      (while (or (not (tp--master-control-host tp--local-master))
+		 (not (tp--master-static-host tp--local-master)))
 	(sleep-for .01))
+      (message "Static host is %s" (tp--master-static-host tp--local-master))
 
       ;; remove filter to prevent resetting addresses
-      (remove-function (process-filter tp--process) 'tp--find-server-filter)
+      (remove-function (process-filter (tp--master-process tp--local-master)) 'tp--find-server-filter)
       
       (message "Starting websocket server")
       ;; connect to typst-preview socket
-      (setq tp--control-socket
-	    (websocket-open (concat "ws://" tp--control-host)
+      (setf (tp--master-socket tp--local-master)
+	    (websocket-open (concat "ws://" (tp--master-control-host tp--local-master))
 			    :custom-header-alist '(("origin" . "vscode-webview://emacs"))
 			    :on-message (lambda (_websocket frame) (tp--parse-message _websocket frame))
 			    :on-close (lambda (_websocket) (message "Typst-preview-mode websocket closed."))))
-      
-      (message "Master not defined, setting new master with path %S." tp--master-file)
-
-      (setq tp--local-master
-	    (make-tp--master
-	     :path tp--master-file
-	     :process tp--process
-	     :children (list tp--file-path)
-	     :socket tp--control-socket
-	     :static-host tp--static-host
-	     :control-host tp--control-host))
+      (setf (tp--master-children tp--local-master) (list tp--file-path))
+      ;; (setq tp--local-master
+      ;; 	    (make-tp--master
+      ;; 	     :path tp--master-file
+      ;; 	     :process tp--process
+      ;; 	     :children (list tp--file-path)
+      ;; 	     :socket tp--control-socket
+      ;; 	     :static-host tp--static-host
+      ;; 	     :control-host tp--control-host))
       (push tp--local-master tp--active-masters))
 
     (with-current-buffer tp--file
@@ -281,8 +282,8 @@ typst-preview, or modify `typst-preview-executable'"))
 		#'tp--send-buffer-on-type nil t))
 
     (if (or open-browser (and typst-preview-open-browser-automatically (called-interactively-p 'any)))
-	(tp--connect-browser typst-preview-browser tp--static-host)
-      (message "Typst-preview started, navigate to %s in your browser or run `typst-preview-open-browser'." tp--static-host))
+	(tp--connect-browser typst-preview-browser (tp--master-static-host tp--local-master))
+      (message "Typst-preview started, navigate to %s in your browser or run `typst-preview-open-browser'." (tp--master-static-host tp--local-master)))
     
     (push `(,tp--file-path) tp--active-buffers)
     (add-hook 'kill-buffer-hook #'typst-preview-stop nil t)))
@@ -292,9 +293,9 @@ typst-preview, or modify `typst-preview-executable'"))
   "Return t if websocket is connected to typst-preview server."
   (and
    (bound-and-true-p tp--local-master)
-   (boundp 'tp--control-socket)
-   (websocket-openp tp--control-socket)
-   (process-live-p tp--process)
+   ;; (boundp 'tp--control-socket)
+   ;; (websocket-openp tp--control-socket)
+   (process-live-p (tp--master-process tp--local-master))
    (member tp--file-path (tp--master-children tp--local-master))))
 
 ;;;###autoload
@@ -307,7 +308,7 @@ typst-preview, or modify `typst-preview-executable'"))
       (if (not (string-equal tp--master-file tp--file-path))
 	  (setf (tp--master-children global-master)
 		(delete tp--file-path (tp--master-children global-master)))
-	(delete-process tp--process)
+	(delete-process (tp--master-process tp--local-master))
 	(delete (list tp--file-path) tp--active-buffers)
 	(setf tp--active-masters (delete tp--local-master tp--active-masters))
 	(if (eq '() tp--active-masters)
@@ -320,7 +321,7 @@ typst-preview, or modify `typst-preview-executable'"))
   "Restart typst-preview server."
   (interactive)
   (typst-preview-stop)
-  (sleep-for 1)
+  ;; (sleep-for 1)
   (typst-preview-start))
 
 ;;;###autoload
@@ -331,7 +332,7 @@ typst-preview, or modify `typst-preview-executable'"))
 			    ("filepath" . ,tp--file-path)
 			    ("line" . ,(1- (line-number-at-pos)))
 			    ("character" . ,(max 1 (current-column)))))))
-    (websocket-send-text tp--control-socket msg)
+    (websocket-send-text (tp--master-socket tp--local-master) msg)
     (message "Sending position to typst-preview server")))
 
 (defun typst-preview-sync-memory ()
@@ -340,7 +341,7 @@ typst-preview, or modify `typst-preview-executable'"))
   (let ((msg (json-encode `(("event" . "syncMemoryFiles")
 			    ("files"  (,tp--file-path
 				       . ,(tp--stringify-buffer)))))))
-    (websocket-send-text tp--control-socket msg)
+    (websocket-send-text (tp--master-socket tp--local-master) msg)
     ;; (message "syncing memory files")
     ))
 
@@ -351,7 +352,7 @@ typst-preview, or modify `typst-preview-executable'"))
   (interactive)
   (let* ((browser-list '("default" "xwidget" "safari" "google chrome" "eaf-browser"))
 	 (browser (completing-read "Browser: " browser-list nil nil)))
-    (tp--connect-browser browser tp--static-host)))
+    (tp--connect-browser browser (tp--master-static-host tp--local-master))))
 
 ;;;###autoload
 (defun typst-preview-list-active-files ()
@@ -374,6 +375,7 @@ typst-preview, or modify `typst-preview-executable'"))
 (defun typst-preview-clear-active-files ()
   "Clear all active typst files."
   (interactive)
+  ;; TODO: run stop on all active buffers
   (setq tp--active-masters '()))
 
 ;;;;; Private
@@ -429,9 +431,9 @@ typst-preview, or modify `typst-preview-executable'"))
 (defun tp--find-server-filter (proc input)
   "Filter `PROC' `INPUT' to find static and control host addresses"
   (if (string-match "Static file server listening on: \\(.+\\)" input)
-      (setq tp--static-host (match-string 1 input)))
+      (setf (tp--master-static-host tp--local-master) (match-string 1 input)))
   (if (string-match "Control panel server listening on: \\(.+\\)" input)
-      (setq tp--control-host (match-string 1 input))))
+      (setf (tp--master-control-host tp--local-master) (match-string 1 input))))
 
 (defun tp--get-buffer-position ()
   "Get position in buffer as a vector."
@@ -465,7 +467,7 @@ typst-preview, or modify `typst-preview-executable'"))
 	 (json-encode `(("event" . "updateMemoryFiles")
 			("files"  (,tp--file-path
 				   . ,(tp--stringify-buffer)))))))
-    (websocket-send-text tp--control-socket content)))
+    (websocket-send-text (tp--master-socket tp--local-master) content)))
 
 ;; according to SO, https://stackoverflow.com/questions/31079099/emacs-after-change-functions-are-not-executed-after-buffer-modification
 ;; need to wrap this, and provide input variables
