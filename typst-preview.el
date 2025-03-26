@@ -280,13 +280,12 @@ typst-preview, or modify `typst-preview-executable'"))
       (add-hook 'after-change-functions
 		#'tp--send-buffer-on-type nil t))
 
-    (if typst-preview-open-browser-automatically
+    (if (or open-browser (and typst-preview-open-browser-automatically (called-interactively-p 'any)))
 	(tp--connect-browser typst-preview-browser tp--static-host)
       (message "Typst-preview started, navigate to %s in your browser or run `typst-preview-open-browser'." tp--static-host))
     
     (push `(,tp--file-path) tp--active-buffers)
-    (add-hook 'kill-buffer-hook #'typst-preview-stop nil t)
-    ))
+    (add-hook 'kill-buffer-hook #'typst-preview-stop nil t)))
 
 ;;;###autoload
 (defun typst-preview-connected-p ()
@@ -351,7 +350,7 @@ typst-preview, or modify `typst-preview-executable'"))
   "Open typst-preview browser interactively."
   (interactive)
   (let* ((browser-list '("default" "xwidget" "safari" "google chrome" "eaf-browser"))
-	 (browser (completing-read "Browser:" browser-list nil nil)))
+	 (browser (completing-read "Browser: " browser-list nil nil)))
     (tp--connect-browser browser tp--static-host)))
 
 ;;;###autoload
