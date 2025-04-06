@@ -123,6 +123,11 @@ This is intended for multi-file projects where a file is included using e.g. #in
 (defvar typst-preview-host "127.0.0.1:0" "Default address for typst
   websocket.")
 
+(defcustom typst-preview-cmd-options '()
+  "Additional command line options for preview program. Should be a list of strings."
+  :type 'list
+  :group 'typst-preview)
+
 ;; PRIVATE
 
 (defvar tp--active-buffers '() "Get active typst buffers.")
@@ -223,25 +228,16 @@ typst-preview, or modify `typst-preview-executable'"))
     (unless tp--local-master
       (setq tp--local-master (make-tp--master :path tp--master-file))
       
-      (if (string= typst-preview-executable "tinymist preview")
-	  (setf (tp--master-process tp--local-master)
-		(start-process "typst-preview-proc" tp--ws-buffer
-					   "tinymist" "preview" "--partial-rendering" "--no-open"
-					   "--host" typst-preview-host
-					   "--control-plane-host"  "127.0.0.1:0"
-					   "--data-plane-host"  "127.0.0.1:0"
-					   "--root" tp--preview-dir
-					   "--invert-colors" typst-preview-invert-colors
-					   tp--master-file))
-	  (setf (tp--master-process tp--local-master)
-	      (start-process "typst-preview-proc" tp--ws-buffer
-					 "typst-preview" "--partial-rendering" "--no-open"
-					 "--host" typst-preview-host
-					 "--control-plane-host"  "127.0.0.1:0"
-					 "--data-plane-host"  "127.0.0.1:0"
-					 "--root" tp--preview-dir
-					 "--invert-colors" typst-preview-invert-colors
-					 tp--master-file)))
+      (let ((preview-args
+	     `(,@(split-string-shell-command typst-preview-executable)
+	       "--partial-rendering" "--no-open" "--host" ,typst-preview-host
+	       "--control-plane-host"  "127.0.0.1:0"
+	       "--data-plane-host"  "127.0.0.1:0"
+	       "--root" ,tp--preview-dir
+	       "--invert-colors" ,typst-preview-invert-colors
+	       ,(append typst-preview-cmd-options tp--master-file))))
+	(setf (tp--master-process tp--local-master)
+		(apply 'start-process "typst-preview-proc" tp--ws-buffer preview-args)))
       (message "Started %S process." typst-preview-executable)
 
       ;; requires lexical scoping!
