@@ -298,6 +298,7 @@ typst-preview, or modify `typst-preview-executable'"))
 	(delete (list tp--file-path) tp--active-buffers)
 	(setf tp--active-masters (delete tp--local-master tp--active-masters))
 	(if (eq '() tp--active-masters)
+	    (websocket-close (tp--master-socket tp--local-master))
 	    (kill-buffer tp--ws-buffer)))
       (kill-local-variable 'tp--local-master)
       (remove-hook 'after-change-functions #'tp--send-buffer-on-type t))))
@@ -372,7 +373,6 @@ typst-preview, or modify `typst-preview-executable'"))
   "React to message `FRAME' received from typst-preview server `SOCK'."
   (let* ((msg (json-parse-string (websocket-frame-text frame)))
 	 (event (gethash "event" msg)))
-    ;; (message "typst preview file: %s" tp--file)
     (pcase event
       ("editorScrollTo"
        (tp--editor-scroll-to sock msg))
