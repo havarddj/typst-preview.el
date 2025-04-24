@@ -124,9 +124,16 @@ This is intended for multi-file projects where a file is included using e.g. #in
   websocket.")
 
 (defcustom typst-preview-cmd-options '()
-  "Additional command line options for preview program. Should be a list of strings."
-  :type 'list
+  "Additional command line options for preview program."
+  :type '(repeat string)
   :group 'typst-preview)
+
+(defcustom typst-preview-browser-list
+  '("default" "xwidget" "safari" "google chrome" "eaf-browser")
+  "Browser options offered when calling typst-preview-open-browser.
+Should be a list of strings"
+  :group 'typst-preview
+  :type '(repeat string))
 
 ;; PRIVATE
 
@@ -333,8 +340,7 @@ typst-preview, or modify `typst-preview-executable'"))
 (defun typst-preview-open-browser ()
   "Open typst-preview browser interactively."
   (interactive)
-  (let* ((browser-list '("default" "xwidget" "safari" "google chrome" "eaf-browser"))
-	 (browser (completing-read "Browser: " browser-list nil nil)))
+  (let ((browser (completing-read "Browser: " typst-preview-browser-list nil nil)))
     (tp--connect-browser browser (tp--master-static-host tp--local-master))))
 
 ;;;###autoload
