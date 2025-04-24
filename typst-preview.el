@@ -216,12 +216,7 @@ typst-preview, or modify `typst-preview-executable'"))
     (setq tp--ws-buffer (get-buffer-create "*ws-typst-server*"))
 
     (unless tp--master-file
-      (setq tp--master-file
-	    (expand-file-name
-	     (read-file-name (format "Master file (default: %s): " tp--file) nil tp--file)))
-      (if (and typst-preview-ask-if-pin-main
-	       (y-or-n-p "Save master file as local variable?"))
-	  (add-file-local-variable 'tp--master-file tp--master-file)))
+      (call-interactively 'typst-set-master-file))
     
     (setq tp--preview-dir (file-name-directory tp--master-file))
 
@@ -229,26 +224,29 @@ typst-preview, or modify `typst-preview-executable'"))
 	     if (string-equal tp--master-file (tp--master-path master))
 	     do
 	     (push tp--file-path (tp--master-children master))
-	     (setq tp--local-master master)
-	     )
+             (setq tp--local-master master))
     
     (unless tp--local-master
-      (setq tp--local-master (make-tp--master :path tp--master-file))
+      (setq tp--local-master
+            (make-tp--master :path tp--master-file))
       
       (let ((preview-args
-	     `(,@(split-string-shell-command typst-preview-executable)
-	       "--partial-rendering" "--no-open" "--host" ,typst-preview-host
-	       "--control-plane-host"  "127.0.0.1:0"
-	       "--data-plane-host"  "127.0.0.1:0"
-	       "--root" ,tp--preview-dir
-	       "--invert-colors" ,typst-preview-invert-colors
-	       ,(append typst-preview-cmd-options tp--master-file))))
-	(setf (tp--master-process tp--local-master)
-		(apply 'start-process "typst-preview-proc" tp--ws-buffer preview-args)))
+             `(,@(split-string-shell-command typst-preview-executable)
+               "--partial-rendering" "--no-open" "--host" ,typst-preview-host
+               "--control-plane-host"  "127.0.0.1:0"
+               "--data-plane-host"  "127.0.0.1:0"
+               "--root" ,tp--preview-dir
+               "--invert-colors" ,typst-preview-invert-colors
+               ,(append typst-preview-cmd-options tp--master-file))))
+        (setf (tp--master-process tp--local-master)
+              (apply 'start-process "typst-preview-proc" tp--ws-buffer preview-args)))
       (message "Started %S process." typst-preview-executable)
 
       ;; requires lexical scoping!
-      (add-function :before (process-filter (tp--master-process tp--local-master)) 'tp--find-server-filter)
+      (add-function
+       :before (process-filter
+                (tp--master-process tp--local-master)) 'tp--find-server-filter)
+      
       ;; wait until response tp-process to define host addresses
       (while (or (not (tp--master-control-host tp--local-master))
 		 (not (tp--master-static-host tp--local-master)))
@@ -256,7 +254,8 @@ typst-preview, or modify `typst-preview-executable'"))
       (message "Static host is %s" (tp--master-static-host tp--local-master))
 
       ;; remove filter to prevent resetting addresses
-      (remove-function (process-filter (tp--master-process tp--local-master)) 'tp--find-server-filter)
+      (remove-function
+       (process-filter (tp--master-process tp--local-master)) 'tp--find-server-filter)
       
       (message "Starting websocket server")
       ;; connect to typst-preview socket
@@ -286,6 +285,15 @@ typst-preview, or modify `typst-preview-executable'"))
    (bound-and-true-p tp--local-master)
    (process-live-p (tp--master-process tp--local-master))
    (member tp--file-path (tp--master-children tp--local-master))))
+
+(defun typst-preview-set-master-file ()
+  (interactive)
+  (setq tp--master-file
+        (expand-file-name
+         (read-file-name (format "Master file (default: %s): " tp--file) nil tp--file)))
+  (if (and typst-preview-ask-if-pin-main
+           (y-or-n-p "Save master file as local variable?"))
+      (add-file-local-variable 'tp--master-file tp--master-file)))
 
 ;;;###autoload
 (defun typst-preview-stop ()
@@ -340,8 +348,14 @@ typst-preview, or modify `typst-preview-executable'"))
 (defun typst-preview-open-browser ()
   "Open typst-preview browser interactively."
   (interactive)
-  (let ((browser (completing-read "Browser: " typst-preview-browser-list nil nil)))
-    (tp--connect-browser browser (tp--master-static-host tp--local-master))))
+  (if (or (bound-and-true-p tp--local-master)
+          (progn (typst-preview-set-master-file)
+                 (call-interactively (lambda ()
+                                       (interactive)
+                                       (typst-preview-start nil)))
+                 (bound-and-true-p tp--local-master))) ;; trust nobody
+      (let ((browser (completing-read "Browser: " typst-preview-browser-list nil nil)))
+        (tp--connect-browser browser (tp--master-static-host tp--local-master)))))
 
 ;;;###autoload
 (defun typst-preview-list-active-files ()
