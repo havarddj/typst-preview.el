@@ -215,10 +215,9 @@ typst-preview, or modify `typst-preview-executable'"))
     (setq tp--file-path (buffer-file-name))
     (setq tp--ws-buffer (get-buffer-create "*ws-typst-server*"))
 
-    (unless tp--master-file
-      (call-interactively 'typst-set-master-file))
-    
+    (typst-preview-set-master-file)
     (setq tp--preview-dir (file-name-directory tp--master-file))
+    
 
     (cl-loop for master in tp--active-masters
 	     if (string-equal tp--master-file (tp--master-path master))
@@ -348,14 +347,11 @@ typst-preview, or modify `typst-preview-executable'"))
 (defun typst-preview-open-browser ()
   "Open typst-preview browser interactively."
   (interactive)
-  (if (or (bound-and-true-p tp--local-master)
-          (progn (typst-preview-set-master-file)
-                 (call-interactively (lambda ()
-                                       (interactive)
-                                       (typst-preview-start nil)))
-                 (bound-and-true-p tp--local-master))) ;; trust nobody
-      (let ((browser (completing-read "Browser: " typst-preview-browser-list nil nil)))
-        (tp--connect-browser browser (tp--master-static-host tp--local-master)))))
+  (when (or (typst-preview-connected-p)
+            (when (y-or-n-p "No preview active. Start a preview in current buffer?")
+              (typst-preview-start nil) t))
+    (let ((browser (completing-read "Browser: " typst-preview-browser-list nil nil)))
+      (tp--connect-browser browser (tp--master-static-host tp--local-master)))))
 
 ;;;###autoload
 (defun typst-preview-list-active-files ()
