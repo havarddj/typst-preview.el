@@ -235,7 +235,7 @@ typst-preview, or modify `typst-preview-executable'"))
 	       "--data-plane-host"  "127.0.0.1:0"
 	       "--root" ,tp--preview-dir
 	       "--invert-colors" ,typst-preview-invert-colors
-	       ,(append typst-preview-cmd-options tp--master-file))))
+	       ,@typst-preview-cmd-options ,tp--master-file)))
 	(setf (tp--master-process tp--local-master)
 		(apply 'start-process "typst-preview-proc" tp--ws-buffer preview-args)))
       (message "Started %S process." typst-preview-executable)
