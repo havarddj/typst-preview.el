@@ -222,20 +222,19 @@ typst-preview, or modify `typst-preview-executable'"))
 	     if (string-equal tp--master-file (tp--master-path master))
 	     do
 	     (push tp--file-path (tp--master-children master))
-	     (setq tp--local-master master)
-	     )
+	     (setq tp--local-master master))
     
     (unless tp--local-master
       (setq tp--local-master (make-tp--master :path tp--master-file))
       
       (let ((preview-args
 	     `(,@(split-string-shell-command typst-preview-executable)
-	       "--partial-rendering" "--no-open" "--host" ,typst-preview-host
+	       "--partial-rendering" "true" "--no-open" "--host" ,typst-preview-host
 	       "--control-plane-host"  "127.0.0.1:0"
 	       "--data-plane-host"  "127.0.0.1:0"
 	       "--root" ,tp--preview-dir
 	       "--invert-colors" ,typst-preview-invert-colors
-	       ,(append typst-preview-cmd-options tp--master-file))))
+	       ,@typst-preview-cmd-options ,tp--master-file)))
 	(setf (tp--master-process tp--local-master)
 		(apply 'start-process "typst-preview-proc" tp--ws-buffer preview-args)))
       (message "Started %S process." typst-preview-executable)
@@ -351,8 +350,7 @@ typst-preview, or modify `typst-preview-executable'"))
 		      (setq str (concat str (format "|--> %s\n" child)))))
     (if (string-equal str "")
 	(message "No active typst-preview buffers.")
-      (message str)))
-  )
+      (message str))))
 
 ;;;###autoload
 (defun typst-preview-clear-active-files ()
