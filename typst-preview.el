@@ -65,6 +65,7 @@
 
 (require 'websocket)
 (require 'json)
+(require 'f)
 
 ;;;; Customization
 
@@ -120,17 +121,24 @@ This is intended for multi-file projects where a file is included using e.g. #in
   "If non-NIL, center typst preview source buffer when jumping to
   source." :type 'boolean :group 'typst-preview)
 
+(defcustom typst-preview-partial-rendering nil
+  "If non-NIL, only render part of the document which is visible (experimental feature)."
+  :type 'boolean :group 'typst-preview)
+
 (defvar typst-preview-host "127.0.0.1:0" "Default address for typst
   websocket.")
 
 (defcustom typst-preview-cmd-options '()
   "Additional command line options for preview program. Should be a list of strings."
-  :type 'list
-  :group 'typst-preview)
+  :type 'list :group 'typst-preview)
+
+(defcustom typst-preview-default-dir "."
+  "Default root directory for preview. Can be a relative path"
+  :type 'string :group 'typst-preview)
 
 ;; PRIVATE
 
-(defvar tp--active-buffers '() "Get active typst buffers.")
+(defvar tp--active-buffers '() "List of active typst-preview buffers.")
 
 
 (cl-defstruct tp--master (path :string) process children socket static-host
@@ -185,7 +193,6 @@ This is intended for multi-file projects where a file is included using e.g. #in
 (make-variable-buffer-local 'tp--file-path)
 (make-variable-buffer-local 'tp--ws-buffer)
 
-
 ;;;; Functions
 
 ;;;;; Public
@@ -215,8 +222,6 @@ typst-preview, or modify `typst-preview-executable'"))
       (if (and typst-preview-ask-if-pin-main
 	       (y-or-n-p "Save master file as local variable?"))
 	  (add-file-local-variable 'tp--master-file tp--master-file)))
-    
-    (setq tp--preview-dir (file-name-directory tp--master-file))
 
     (cl-loop for master in tp--active-masters
 	     if (string-equal tp--master-file (tp--master-path master))
@@ -229,10 +234,12 @@ typst-preview, or modify `typst-preview-executable'"))
       
       (let ((preview-args
 	     `(,@(split-string-shell-command typst-preview-executable)
-	       "--partial-rendering" "true" "--no-open" "--host" ,typst-preview-host
-	       "--control-plane-host"  "127.0.0.1:0"
-	       "--data-plane-host"  "127.0.0.1:0"
-	       "--root" ,tp--preview-dir
+	       "--partial-rendering" ,(if typst-preview-partial-rendering "true" "false")
+	       "--no-open"
+	       "--host" ,typst-preview-host
+	       "--control-plane-host" "127.0.0.1:0"
+	       "--data-plane-host" "127.0.0.1:0"
+	       "--root" ,(f-canonical typst-preview-default-dir)
 	       "--invert-colors" ,typst-preview-invert-colors
 	       ,@typst-preview-cmd-options ,tp--master-file)))
 	(setf (tp--master-process tp--local-master)
@@ -266,7 +273,8 @@ typst-preview, or modify `typst-preview-executable'"))
 
     (if (or open-browser (and typst-preview-open-browser-automatically (called-interactively-p 'any)))
 	(tp--connect-browser typst-preview-browser (tp--master-static-host tp--local-master))
-      (message "Typst-preview started, navigate to %s in your browser or run `typst-preview-open-browser'." (tp--master-static-host tp--local-master)))
+      (message "Typst-preview started, navigate to %s in your browser or run `typst-preview-open-browser'."
+	       (tp--master-static-host tp--local-master)))
     
     (push `(,tp--file-path) tp--active-buffers)
     (add-hook 'kill-buffer-hook #'typst-preview-stop nil t)))
@@ -391,9 +399,10 @@ typst-preview, or modify `typst-preview-executable'"))
 	  ;; (message "Prompted by websocket, starting typst-preview-mode in %s" file-name)
 	  (setq tp--local-master master)
 	  (setq tp--master-file (tp--master-path master))
+	  (typst-preview-start nil)))
 	  (if (not (bound-and-true-p typst-preview-mode))
 	      (typst-preview-mode))
-	  (typst-preview-start nil))))
+  )
 
 (defun tp--connect-browser (browser hostname)
   "Open browser `BROWSER' at websocket URL `HOSTNAME'."

@@ -136,13 +136,13 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 # Todos:
 If you want to get involved, feel free to fork this repository and look into one of the following:
 
+-   [ ] Prevent typst-preview from opening new preview when opening ancillary files
+-   [ ] Implement better error handling
 -   [ ] Get rid of annoying 'No active typst-preview'-message
 -   [ ] Add example using :vc in use-package
 -   [ ] Add outline functionality (NB: this might come for free from tinymist?)
 -   [ ] Ensure that slides work properly
--   [ ] Fix \"revert buffer makes typst restart\" - should be enough to
-    look for existing instance. Does reverting reset buffer-local
-    variables?
+-   [ ] Fix \"revert buffer makes typst restart\" - should be enough look for existing instance. Does reverting reset buffer-local variables?
 -   [ ] Sync memory files on save
 -   [ ] Solve some out of bounds problem? (jump to source on certain symbols)
 -   [ ] Refresh local variables of connected files when running clear-active-files
