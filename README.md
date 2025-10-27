@@ -4,7 +4,7 @@ typst-preview.el
 *Warning*: This is work in progress and quite rough around the edges, but the basic functionality is there.
 
 Live preview of typst files inside emacs! Building on
-[typst-preview](https://github.com/Enter-tainer/typst-preview), which
+[tinymist](https://github.com/Myriad-Dreamin/tinymist), which
 was originally written for VS Code, and also inspired by
 [typst-preview.nvim](https://github.com/chomosuke/typst-preview.nvim).
 
@@ -30,17 +30,6 @@ it\'s in your \$PATH. To test this, create test.typ and run
 
 ```sh
 tinymist preview test.typ
-```
-
-It is also possible to use the old `typst-preview`, found at <https://github.com/Enter-tainer/typst-preview/releases>. Run
-
-``` sh
-typst-preview test.typ
-```
-to test it. Since `typst-preview` has been deprecated in favour of `tinymist preview`, the latter is the new default. You can change back to `typst-preview` using 
-
-``` el
-(setq typst-preview-executable "typst-preview")
 ```
 
 Then put `typst-preview.el` in your load-path, make sure `websocket` is installed, and put this in your init file:
