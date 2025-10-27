@@ -147,9 +147,8 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 # Todos:
 If you want to get involved, feel free to fork this repository and look into one of the following:
 
--   [ ] Implement better error handling
--   [ ] Get rid of annoying 'No active typst-preview'-message (find better solution)
--   [ ] Add example using :vc in use-package
+-   [ ] Implement better error message handling
+-   [ ] Implement better error handling in general
 -   [ ] Add outline functionality (NB: this might come for free from tinymist?)
 -   [ ] Ensure that slides work properly
 -   [ ] Fix \"revert buffer makes typst restart\" - should be enough look for existing instance. Does reverting reset buffer-local variables?
