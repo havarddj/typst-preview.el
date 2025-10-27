@@ -300,11 +300,11 @@ open a default browser window."
 	(delete-process (tp--master-process tp--local-master))
 	(setf tp--active-masters (delete tp--local-master tp--active-masters))
 	(if (eq '() tp--active-masters)
-	    (websocket-close (tp--master-socket tp--local-master))
-	    (kill-buffer (get-buffer "*ws-typst-server*"))))
+	    (kill-buffer (get-buffer "*ws-typst-server*"))
+	  (websocket-close (tp--master-socket tp--local-master))))
       (kill-local-variable 'tp--local-master)
       (remove-hook 'after-change-functions #'tp--send-buffer-on-type t)))
-  ;; Make sure only active buffers are in the tp--active-buffers.
+  ;; Make sure only active buffers are in the list tp--active-buffers.
   (setq tp--active-buffers
 	(cl-remove-if-not 'buffer-live-p tp--active-buffers)))
 

@@ -1,8 +1,6 @@
 typst-preview.el
 ==========
 
-*Warning*: This is work in progress and quite rough around the edges, but the basic functionality is there.
-
 Live preview of typst files inside emacs! Building on
 [tinymist](https://github.com/Myriad-Dreamin/tinymist), which
 was originally written for VS Code, and also inspired by
@@ -31,8 +29,9 @@ it\'s in your \$PATH. To test this, create test.typ and run
 ```sh
 tinymist preview test.typ
 ```
+in the same directory.
 
-Then put `typst-preview.el` in your load-path, make sure `websocket` is installed, and put this in your init file:
+Now put `typst-preview.el` in your load-path, make sure `websocket` is installed, and put this in your init file:
 
 ```el
 (require 'typst-preview)
@@ -57,7 +56,7 @@ If you use `doom`, try:
 
 ## Basic usage
 
-Inside a .typ-file, run `M-x typst-preview-mode`. It will prompt you to set a master file, which by default is the file you are currently editing. This is useful if you have a file which links to other files using `#include`. Then it starts a preview in your default browser, and connects the source buffer to the server, sending live updates. 
+Inside a .typ file, run `M-x typst-preview-mode`. It will prompt you to set a master file, which by default is the file you are currently editing. This is useful if you have a file which links to other files using `#include`. Then it starts a preview in your default browser, and connects the source buffer to the server, sending live updates. 
 
 Start, stop and restart `typst-preview` using `M-x typst-preview-start`,
 `M-x typst-preview-stop` and `M-x typst-preview-restart`. Jumping from source to preview: `M-x typst-preview-send-position`. 
@@ -93,35 +92,28 @@ Here is a sample configuration using `use-package` which includes `typst-ts-mode
 
 ``` el
 (use-package websocket)
-(use-package typst-preview
-  :load-path "directory-of-typst-preview.el"
-  :config
-  (setq typst-preview-browser "default")
-  (define-key typst-preview-mode-map (kbd "C-c C-j") 'typst-preview-send-position)
-  )
 
-(use-package typst-ts-mode
-  :load-path "directory-of-typst-ts-mode.el"
+(use-package typst-preview
+  ;; :load-path "path/to/typst-preview.el" ;; if installed manually
+  :init
+  (setq typst-preview-autostart t) ; start typst preview automatically when typst-preview-mode is activated
+  (setq typst-preview-open-browser-automatically t) ; open browser automatically when typst-preview-start is run
+
   :custom
-  (typst-ts-mode-watch-options "--open")
+  (typst-preview-browser "default") 	; this is the default option
+  (typst-preview-invert-colors "auto")	; invert colors depending on system theme
+  (typst-preview-executable "tinymist preview") ; choose between tinymist and typst-preview (deprecated!)
+  
   :config
-  ;; make sure to install typst-lsp from
-  ;; https://github.com/nvarner/typst-lsp/releases
-  ;; or use tinymist
-  (add-to-list 'lsp-language-id-configuration '(typst-ts-mode . "typst"))
-  (lsp-register-client
-   (make-lsp-client
-    :new-connection (lsp-stdio-connection "typst-lsp")
-    :major-modes '(typst-ts-mode)
-    :server-id 'typst-lsp))
-  )
+  (define-key typst-preview-mode-map (kbd "C-c C-j") 'typst-preview-send-position))
+
 ```
 
 ## FAQ: 
 
 ### How do I configure the root directory of my project?
 
-Customize the `typst-preview-default-dir` variable; this can be done file-locally, see [main.typ](test-subfolders/main_folder/main.typ) for an example.
+Customize the `typst-preview-default-dir` variable; this can be done file-locally, see [main.typ](test/test-subfolders/main_folder/main.typ) for an example.
 
 ### Can I run typst-preview in an emacs buffer not attached to a file?
 
@@ -134,13 +126,13 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 
 
 # Todos:
-If you want to get involved, feel free to fork this repository and look into one of the following:
+If you want to get involved, here are some suggestions for potential improvements:
 
+-   [ ] Create an option to let the tinymist language server handle previews
 -   [ ] Implement better error message handling
 -   [ ] Implement better error handling in general
 -   [ ] Add outline functionality (NB: this might come for free from tinymist?)
 -   [ ] Ensure that slides work properly
--   [ ] Fix \"revert buffer makes typst restart\" - should be enough look for existing instance. Does reverting reset buffer-local variables?
 -   [ ] Sync memory files on save
 -   [ ] Solve some out of bounds problem? (jump to source on certain symbols)
 -   [ ] Refresh local variables of connected files when running clear-active-files
