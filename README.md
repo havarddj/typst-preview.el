@@ -136,7 +136,7 @@ Customize the `typst-preview-default-dir` variable; this can be done file-locall
 
 ### Can I run typst-preview in an emacs buffer not attached to a file?
 
-At the moment, no. But see #13.
+At the moment, no. But see [#13](https://github.com/havarddj/typst-preview.el/issues/13).
 
 
 
