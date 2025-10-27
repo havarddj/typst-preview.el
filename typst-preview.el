@@ -417,7 +417,7 @@ open a default browser window."
 			  (eaf-open-browser-other-window full-url)))
       (_
        (let* ((browse-url-generic-program (executable-find browser))
-	      (browse-url-browser-function 'browse-url-generic))
+	      (browse-url-browser-function 'browse-url-generic-program))
 	 (browse-url full-url))))))
 
 
