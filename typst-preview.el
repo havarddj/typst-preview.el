@@ -214,7 +214,7 @@ open a default browser window."
 
     (unless tp--master-file
       (setq tp--master-file
-	    (expand-file-name
+	    (f-canonical
 	     (read-file-name (format "Master file (default: %s): " (buffer-file-name)) nil (buffer-file-name))))
       (unless tp--master-file
 	(error "No valid master file found for current buffer"))
@@ -225,7 +225,7 @@ open a default browser window."
     (cl-loop for master in tp--active-masters
 	     if (string-equal tp--master-file (tp--master-path master))
 	     do
-	     (push (buffer-file-name) (tp--master-children master))
+	     (push (f-canonical buffer-file-name) (tp--master-children master))
 	     (setq tp--local-master master))
     
     (unless tp--local-master
@@ -263,7 +263,7 @@ open a default browser window."
 			    :custom-header-alist '(("origin" . "vscode-webview://emacs"))
 			    :on-message (lambda (socket frame) (tp--parse-message socket frame))
 			    :on-close (lambda (_) (message "Typst-preview-mode websocket closed."))))
-      (setf (tp--master-children tp--local-master) (list (buffer-file-name)))
+      (setf (tp--master-children tp--local-master) (list (f-canonical buffer-file-name)))
       (push tp--local-master tp--active-masters))
 
     (add-hook 'after-change-functions
@@ -283,7 +283,7 @@ open a default browser window."
   (and
    (bound-and-true-p tp--local-master)
    (process-live-p (tp--master-process tp--local-master))
-   (member (buffer-file-name) (tp--master-children tp--local-master))))
+   (member (f-canonical buffer-file-name) (tp--master-children tp--local-master))))
 
 ;;;###autoload
 (defun typst-preview-stop ()
@@ -294,9 +294,9 @@ open a default browser window."
 
     (setq tp--active-buffers (remove (current-buffer) tp--active-buffers))
     (let ((global-master (car (member tp--local-master tp--active-masters))))
-      (if (not (string-equal tp--master-file (buffer-file-name)))
+      (if (not (string-equal tp--master-file (f-canonical buffer-file-name)))
 	  (setf (tp--master-children global-master)
-		(delete (buffer-file-name) (tp--master-children global-master)))
+		(delete (f-canonical buffer-file-name) (tp--master-children global-master)))
 	(delete-process (tp--master-process tp--local-master))
 	(setf tp--active-masters (delete tp--local-master tp--active-masters))
 	(if (eq '() tp--active-masters)
@@ -321,7 +321,7 @@ open a default browser window."
   "Send position in buffer to preview server."
   (interactive)
   (let ((msg (json-encode `(("event" . "panelScrollTo")
-			    ("filepath" . ,(buffer-file-name))
+			    ("filepath" . ,(f-canonical buffer-file-name))
 			    ("line" . ,(1- (line-number-at-pos)))
 			    ("character" . ,(max 1 (current-column)))))))
     (websocket-send-text (tp--master-socket tp--local-master) msg)
@@ -331,7 +331,7 @@ open a default browser window."
   "Sync typst-preview memory."
   (interactive)
   (let ((msg (json-encode `(("event" . "syncMemoryFiles")
-			    ("files"  (,(buffer-file-name)
+			    ("files"  (,(f-canonical buffer-file-name)
 				       . ,(tp--stringify-buffer)))))))
     (websocket-send-text (tp--master-socket tp--local-master) msg)
     ;; (message "syncing memory files")
@@ -458,7 +458,7 @@ open a default browser window."
   "Send buffer to typst-preview server."
   (let ((content
 	 (json-encode `(("event" . "updateMemoryFiles")
-			("files"  (,(buffer-file-name)
+			("files"  (,(f-canonical buffer-file-name)
 				   . ,(tp--stringify-buffer)))))))
     (websocket-send-text (tp--master-socket tp--local-master) content)))
 
