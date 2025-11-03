@@ -119,6 +119,10 @@ Customize the `typst-preview-default-dir` variable; this can be done file-locall
 
 At the moment, no. But see [#13](https://github.com/havarddj/typst-preview.el/issues/13).
 
+### How can I set the typst-preview browser to something else than my system default browser?
+
+Typst-preview.el uses `browse-url` under the hood, so you can customize `browse-url-browser-function` as described [in this blog post](https://assortedarray.com/posts/browse-url-sites-custom/). Previously this was done inside the typst-preview.el code, but was changed for v1.0.0beta in order to simplify the code for submission to Melpa.
+
 
 
 # License:
