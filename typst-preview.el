@@ -147,6 +147,9 @@ Should be a list of strings."
 (defvar typst-preview--active-masters '()
   "List of active typst-preview masters.")
 
+(defvar typst-preview--tinymist-version nil
+  "Current version of tinymist.")
+
 ;;;;; Keymaps
 
 (defvar typst-preview-mode-map
@@ -175,7 +178,7 @@ Should be a list of strings."
       (if typst-preview-autostart
 	  (progn
 	    (typst-preview-start typst-preview-open-browser-automatically)
-	    (message "Typst preview started!"))
+	    (message "Typst preview started! (Tinymist version %s)" (mapconcat #'int-to-string (typst-preview--get-tinymist-version) ".")))
 	(message "Typst-preview-mode enabled, run typst-preview-start to start preview"))
     (typst-preview-stop))
   :key-map typst-preview-mode-map)
@@ -229,7 +232,7 @@ open a default browser window."
       
       (let ((preview-args
 	     `(,@(split-string-shell-command typst-preview-executable)
-	       "--partial-rendering" ,(if typst-preview-partial-rendering "true" "false")
+	       ,@(typst-preview--partial-rendering-parameter)
 	       "--no-open"
 	       "--host" ,typst-preview-host
 	       "--control-plane-host" "127.0.0.1:0"
@@ -464,6 +467,34 @@ Needs to include variables BEGIN, END and LENGTH to be
 compatible with `after-change-functions'."
   (let ((inhibit-modification-hooks nil))
     (typst-preview--send-buffer)))
+
+(defun typst-preview--get-tinymist-version ()
+  "Get tinymist current version.'.
+Also set the global variable `typst--preview--tinymist-version."
+  (unless typst-preview--tinymist-version (setq typst-preview--tinymist-version (mapcar #'string-to-number (split-string (shell-command-to-string "tinymist -V") "\\." t))))
+  typst-preview--tinymist-version)
+
+(defun typst-preview--compare-tinymist-versions (version)
+  "Check whether current tinymist version is greater, lower or equal to VERSION.
+
+VERSION must be a list representing the version numbers.
+For instance, \"3.0.0\" is represented as (3 0 0)"
+  (typst-preview--get-tinymist-version)
+  (cond
+   ((value< typst-preview--tinymist-version version) 'lower)
+   ((value< version typst-preview--tinymist-version) 'greater)
+   ('equal)))
+
+(defun typst-preview--partial-rendering-parameter ()
+  "Return --partial-rendering with our without argument.
+
+It depends on tinymist version.  Before 0.13.17, the parameter
+was used without argument."
+  (if (eq (typst-preview--compare-tinymist-versions '(0 13 17)) 'lower)
+      (if typst-preview-partial-rendering
+	  '("--partial-rendering")
+	'())
+    (list "--partial-rendering" (if typst-preview-partial-rendering "true" "false"))))
 
 ;;;; Footer
 
