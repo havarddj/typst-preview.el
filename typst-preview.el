@@ -5,7 +5,7 @@
 ;; Author: Håvard Damm-Johnsen <havard-dj@proton.me>
 ;; URL: https://github.com/havarddj/typst-preview.el
 ;; Version: 1.0.0
-;; Package-Requires: ((emacs "28.1") (websocket "1.15"))
+;; Package-Requires: ((emacs "28.1") (websocket "1.15") (compat "30.1"))
 ;; Keywords: convenience, languages, tools
 
 ;; This file is not part of GNU Emacs.
@@ -247,10 +247,10 @@ open a default browser window."
       ;; wait for response from tinymist process to define host addresses
       (let ((timeout-ctr 1))
 	(while (or (not (typst-preview--master-control-host typst-preview--local-master))
-		   (not (typst-preview--master-static-host typst-preview--local-master))) 
+		   (not (typst-preview--master-static-host typst-preview--local-master)))
 	  (sleep-for .01)
 	  (if (> (cl-incf timeout-ctr) 300) ; wait 3 seconds
-	      (error "Timeout waiting for host addresses from tinymist. See *ws-typst-server* buffer for details."))))
+	      (error "Timeout waiting for host addresses from tinymist. See *ws-typst-server* buffer for details"))))
 
       ;; remove filter to prevent resetting addresses
       (remove-function (process-filter (typst-preview--master-process typst-preview--local-master)) #'typst-preview--find-server-filter)
@@ -468,13 +468,13 @@ compatible with `after-change-functions'."
     (typst-preview--send-buffer)))
 
 (defun typst-preview--get-tinymist-version ()
-  "Get version of tinymist in typst-preview-executable as list of numbers."
+  "Get version of tinymist in `typst-preview-executable' as list of numbers."
   (mapcar #'string-to-number
 	  (split-string
 	   (shell-command-to-string (concat typst-preview-executable " -V")) "\\." t)))
 
 (defun typst-preview--get-tinymist-version-string ()
-  "Get version of tinymist in typst-preview-executable as string."
+  "Get version of tinymist in `typst-preview-executable' as string."
   (shell-command-to-string (concat typst-preview-executable " -V")))
 
 (defun typst-preview--partial-rendering-parameter ()
