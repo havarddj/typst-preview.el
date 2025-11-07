@@ -85,8 +85,8 @@ Options: \"xwidget\", \"eaf-browser\", \"default\"."
   :type 'string
   :group 'typst-preview)
 
-(defcustom typst-preview-executable "tinymist preview"
-  "Program for running typst preview."
+(defcustom typst-preview-executable "tinymist"
+  "Path to tinymist binary. Can be relative or absolute."
   :type 'string
   :group 'typst-preview)
 
@@ -147,9 +147,6 @@ Should be a list of strings."
 (defvar typst-preview--active-masters '()
   "List of active typst-preview masters.")
 
-(defvar typst-preview--tinymist-version nil
-  "Current version of tinymist.")
-
 ;;;;; Keymaps
 
 (defvar typst-preview-mode-map
@@ -177,8 +174,7 @@ Should be a list of strings."
   (if typst-preview-mode
       (if typst-preview-autostart
 	  (progn
-	    (typst-preview-start typst-preview-open-browser-automatically)
-	    (message "Typst preview started! (Tinymist version %s)" (mapconcat #'int-to-string (typst-preview--get-tinymist-version) ".")))
+	    (typst-preview-start typst-preview-open-browser-automatically))
 	(message "Typst-preview-mode enabled, run typst-preview-start to start preview"))
     (typst-preview-stop))
   :key-map typst-preview-mode-map)
@@ -205,7 +201,7 @@ If OPEN-BROWSER is set and non-NIL, then it will automatically
 open a default browser window."
   (interactive)
 
-  (unless (executable-find (car (split-string typst-preview-executable)))
+  (unless (executable-find typst-preview-executable)
     (error "Typst-preview executable not found. Please install tinymist or modify typst-preview-executable"))
   
   (if (typst-preview-connected-p)
@@ -231,7 +227,8 @@ open a default browser window."
       (setq typst-preview--local-master (make-typst-preview--master :path typst-preview--master-file))
       
       (let ((preview-args
-	     `(,@(split-string-shell-command typst-preview-executable)
+	     `(,(executable-find typst-preview-executable) ; get absolute path
+	       "preview"
 	       ,@(typst-preview--partial-rendering-parameter)
 	       "--no-open"
 	       "--host" ,typst-preview-host
@@ -240,23 +237,24 @@ open a default browser window."
 	       "--root" ,(file-truename typst-preview-default-dir)
 	       "--invert-colors" ,typst-preview-invert-colors
 	       ,@typst-preview-cmd-options ,typst-preview--master-file)))
+	(message "%s" preview-args)
 	(setf (typst-preview--master-process typst-preview--local-master)
 	      (apply #'start-process "typst-preview-proc" (get-buffer-create "*ws-typst-server*") preview-args)))
-      (message "Started %S process." typst-preview-executable)
 
       ;; requires lexical scoping!
       (add-function :before (process-filter (typst-preview--master-process typst-preview--local-master)) #'typst-preview--find-server-filter)
 
       ;; wait for response from tinymist process to define host addresses
-      (while (or (not (typst-preview--master-control-host typst-preview--local-master))
-		 (not (typst-preview--master-static-host typst-preview--local-master)))
-	(sleep-for .01))
-      (message "Static host is %s" (typst-preview--master-static-host typst-preview--local-master))
+      (let ((timeout-ctr 1))
+	(while (or (not (typst-preview--master-control-host typst-preview--local-master))
+		   (not (typst-preview--master-static-host typst-preview--local-master))) 
+	  (sleep-for .01)
+	  (if (> (cl-incf timeout-ctr) 300) ; wait 3 seconds
+	      (error "Timeout waiting for host addresses from tinymist. See *ws-typst-server* buffer for details."))))
 
       ;; remove filter to prevent resetting addresses
       (remove-function (process-filter (typst-preview--master-process typst-preview--local-master)) #'typst-preview--find-server-filter)
       
-      (message "Starting websocket server")
       ;; connect to typst-preview socket
       (setf (typst-preview--master-socket typst-preview--local-master)
 	    (websocket-open (concat "ws://" (typst-preview--master-control-host typst-preview--local-master))
@@ -271,7 +269,8 @@ open a default browser window."
 
     (if (or open-browser (and typst-preview-open-browser-automatically (called-interactively-p 'any)))
 	(typst-preview--connect-browser typst-preview-browser (typst-preview--master-static-host typst-preview--local-master))
-      (message "Typst-preview started, navigate to %s in your browser or run typst-preview-open-browser."
+      (message "Typst-preview (%s) started, navigate to %s in your browser or run typst-preview-open-browser."
+	       (typst-preview--get-tinymist-version-string)
 	       (typst-preview--master-static-host typst-preview--local-master)))
     
     (push (current-buffer) typst-preview--active-buffers)
@@ -459,7 +458,7 @@ open a default browser window."
     (websocket-send-text (typst-preview--master-socket typst-preview--local-master) content)))
 
 ;; according to SO, https://stackoverflow.com/questions/31079099/emacs-after-change-functions-are-not-executed-after-buffer-modification
-;; need to wrap this, and provide input variables
+;; we need to wrap this, and provide input variables
 (defun typst-preview--send-buffer-on-type (_begin _end _length)
   "Helper function to send buffer to server on typing.
 
@@ -469,31 +468,22 @@ compatible with `after-change-functions'."
     (typst-preview--send-buffer)))
 
 (defun typst-preview--get-tinymist-version ()
-  "Get tinymist current version.'.
-Also set the global variable `typst--preview--tinymist-version."
-  (unless typst-preview--tinymist-version (setq typst-preview--tinymist-version (mapcar #'string-to-number (split-string (shell-command-to-string "tinymist -V") "\\." t))))
-  typst-preview--tinymist-version)
+  "Get version of tinymist in typst-preview-executable as list of numbers."
+  (mapcar #'string-to-number
+	  (split-string
+	   (shell-command-to-string (concat typst-preview-executable " -V")) "\\." t)))
 
-(defun typst-preview--compare-tinymist-versions (version)
-  "Check whether current tinymist version is greater, lower or equal to VERSION.
-
-VERSION must be a list representing the version numbers.
-For instance, \"3.0.0\" is represented as (3 0 0)"
-  (typst-preview--get-tinymist-version)
-  (cond
-   ((value< typst-preview--tinymist-version version) 'lower)
-   ((value< version typst-preview--tinymist-version) 'greater)
-   ('equal)))
+(defun typst-preview--get-tinymist-version-string ()
+  "Get version of tinymist in typst-preview-executable as string."
+  (shell-command-to-string (concat typst-preview-executable " -V")))
 
 (defun typst-preview--partial-rendering-parameter ()
-  "Return --partial-rendering with our without argument.
+  "Return --partial-rendering with or without argument.
 
-It depends on tinymist version.  Before 0.13.17, the parameter
+This depends on tinymist version. Before v0.13.17, the parameter
 was used without argument."
-  (if (eq (typst-preview--compare-tinymist-versions '(0 13 17)) 'lower)
-      (if typst-preview-partial-rendering
-	  '("--partial-rendering")
-	'())
+  (if (value< (typst-preview--get-tinymist-version) '(0 13 17) )
+      (if typst-preview-partial-rendering '("--partial-rendering") '())
     (list "--partial-rendering" (if typst-preview-partial-rendering "true" "false"))))
 
 ;;;; Footer
