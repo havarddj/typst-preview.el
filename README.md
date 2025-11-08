@@ -88,7 +88,7 @@ few things:
 
 ## Advanced configuration
 
-Here is a sample configuration using `use-package` which includes `typst-ts-mode` and `typst-lsp`. 
+Here is a sample configuration using `use-package`.
 
 ``` el
 (use-package websocket)
@@ -96,13 +96,14 @@ Here is a sample configuration using `use-package` which includes `typst-ts-mode
 (use-package typst-preview
   ;; :load-path "path/to/typst-preview.el" ;; if installed manually
   :init
-  (setq typst-preview-autostart t) ; start typst preview automatically when typst-preview-mode is activated
+  (setq typst-preview-autostart t) ; start preview automatically when typst-preview-mode is activated
   (setq typst-preview-open-browser-automatically t) ; open browser automatically when typst-preview-start is run
 
   :custom
-  (typst-preview-browser "default") 	; this is the default option
+  (typst-preview-browser "default") 	; this is the default option; other options are `eaf-browser' or `xwidget'.
   (typst-preview-invert-colors "auto")	; invert colors depending on system theme
-  (typst-preview-executable "tinymist preview") ; choose between tinymist and typst-preview (deprecated!)
+  (typst-preview-executable "tinymist") ; path to tinymist binary (relative or absolute)
+  (typst-preview-partial-rendering t)   ; enable partial rendering 
   
   :config
   (define-key typst-preview-mode-map (kbd "C-c C-j") 'typst-preview-send-position))
