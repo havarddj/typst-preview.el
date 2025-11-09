@@ -61,7 +61,6 @@
 
 (require 'websocket)
 (require 'json)
-(require 'f)
 
 ;;;; Customization
 
