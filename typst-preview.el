@@ -1,10 +1,10 @@
 ;;; typst-preview.el --- Live preview of typst -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2023 Håvard Damm-Johnsen
+;; Copyright (C) 2025 Håvard Damm-Johnsen
 
 ;; Author: Håvard Damm-Johnsen <havard-dj@proton.me>
 ;; URL: https://github.com/havarddj/typst-preview.el
-;; Version: 1.0.0-alpha.2
+;; Version: 1.0.0
 ;; Package-Requires: ((emacs "28.1") (websocket "1.15") (compat "30.1"))
 ;; Keywords: convenience, languages, tools
 
