@@ -1,3 +1,5 @@
+[![MELPA](https://melpa.org/packages/typst-preview-badge.svg)](https://melpa.org/#/typst-preview)
+
 typst-preview.el
 ==========
 
@@ -18,20 +20,18 @@ https://github.com/havarddj/typst-preview.el/assets/96797844/e44426b2-b404-416e-
 
 ## MELPA
 
-Currently not on Melpa
+Can be installed from Melpa in [the usual way](https://melpa.org/#/getting-started).
 
-## Manual installation
-
-Install a `tinymist` binary from
-<https://github.com/Myriad-Dreamin/tinymist> and make sure
+Install a `tinymist` binary from <https://github.com/Myriad-Dreamin/tinymist> and make sure
 it\'s in your \$PATH. To test this, create test.typ and run
 
 ```sh
 tinymist preview test.typ
 ```
-in the same directory.
+in the same directory. If you want to customize which `tinymist` binary to use, configure `typst-preview-executable` - see more on customization below.
 
-Now put `typst-preview.el` in your load-path, make sure `websocket` is installed, and put this in your init file:
+## Manual installation
+Install `tinymist` as described above. Then put `typst-preview.el` in your load-path, make sure `websocket` is installed, and put this in your init file:
 
 ```el
 (require 'typst-preview)
