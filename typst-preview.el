@@ -236,7 +236,6 @@ open a default browser window."
 	       "--root" ,(file-truename typst-preview-default-dir)
 	       "--invert-colors" ,typst-preview-invert-colors
 	       ,@typst-preview-cmd-options ,typst-preview--master-file)))
-	(message "%s" preview-args)
 	(setf (typst-preview--master-process typst-preview--local-master)
 	      (apply #'start-process "typst-preview-proc" (get-buffer-create "*ws-typst-server*") preview-args)))
 
