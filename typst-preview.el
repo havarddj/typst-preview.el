@@ -116,27 +116,36 @@ This is intended for multi-file projects where a file is included
   :group 'typst-preview)
 
 (defcustom typst-preview-center-src t
-  "If non-NIL, center typst preview source buffer when jumping to source." :type 'boolean :group 'typst-preview)
+  "If non-NIL, center typst preview source buffer when jumping to source."
+  :type 'boolean
+  :group 'typst-preview)
 
 (defcustom typst-preview-partial-rendering nil
   "If non-NIL, only render part of the document which is visible."
-  :type 'boolean :group 'typst-preview)
+  :type 'boolean
+  :group 'typst-preview)
 
 (defvar typst-preview-host "127.0.0.1:0"
   "Default address for typst websocket.")
 
 (defcustom typst-preview-cmd-options '()
   "Additional command line options for preview program.
-Should be a list of strings."
-  :type '(repeat string) :group 'typst-preview)
+
+For tinymist, run `tinymist preview -h' to see available options.
+Should be a list of strings, each of which contains no spaces."
+  :type '(repeat string)
+  :group 'typst-preview)
 
 (defcustom typst-preview-default-dir "."
   "Default root directory for preview. Can be a relative path."
-  :type 'string :group 'typst-preview)
+  :type 'string
+  :group 'typst-preview)
 
 (defcustom typst-preview-preview-mode "document"
   "Configure the preview mode (document or slides)."
-  :type 'string :group 'typst-preview :options '("document" "slide"))
+  :type 'string
+  :group 'typst-preview
+  :options '("document" "slide"))
 
 ;; PRIVATE
 
