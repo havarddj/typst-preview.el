@@ -74,7 +74,9 @@ To preview the .typ file in a non-default browser, you can set `typst-preview-br
 
 ## Previewing slides
 
-The `tinymist` preview program supports a slide mode. To enable it in buffer, run `M-: (setq-local typst-preview-preview-mode "slide")`, and then start the preview. Note that if you have an existing `typst-preview` process running, you might have to stop it with `typst-preview-stop` first (and run `M-x revert-buffer` for good measure). 
+The `tinymist` preview program supports a slide mode. To enable it in a buffer, run `M-: (setq-local typst-preview-preview-mode "slide")`, and then start the preview. You can also set this as a file-local variable using `M-x add-file-local-variable`. 
+
+Note that if you have an existing `typst-preview` process running and want to change the preview mode, you might have to stop it with `typst-preview-stop` first (and run `M-x revert-buffer` for good measure). 
 
 
 ## Details:
