@@ -72,6 +72,10 @@ with `xwidget`-support:
 
 To preview the .typ file in a non-default browser, you can set `typst-preview-browser` to a browser of your choice, and `typst-preview` will try to find the browser using `(executable-find typst-preview-browser)`. This does not work on macOS, but might perhaps work on linux. You can alternatively add a hook to `typst-preview-mode-hook` to set `browse-url-generic-program` for typst buffers specifically. 
 
+## Previewing slides
+
+The `tinymist` preview program supports a slide mode. To enable it in buffer, run `M-: (setq-local typst-preview-preview-mode "slide")`, and then start the preview. Note that if you have an existing `typst-preview` process running, you might have to stop it with `typst-preview-stop` first (and run `M-x revert-buffer` for good measure). 
+
 
 ## Details:
 
@@ -79,9 +83,9 @@ Enabling `typst-preview-mode` runs `typst-preview-start`, which does a
 few things:
 
 -   Asks for a master file, and if there is a preview process with same master, attaches the current file to that process. Otherwise it will: 
-    -   Start `typst-preview` on the current file, sending results to the
+    -   Start `tinymist` on the current file, sending results to the
         buffer `*ws-typst-server*`.
-    -   Connect to the `typst-preview` server using `websocket`.
+    -   Connect to the `tinymist` server using `websocket`.
 -   Then it opens a browser pointing at the address of the preview, and 
 -   Adds a hook to `after-change-functions` which sends the buffer to
     the server at each keystroke.
@@ -137,7 +141,6 @@ If you want to get involved, here are some suggestions for potential improvement
 -   [ ] Implement better error message handling
 -   [ ] Implement better error handling in general
 -   [ ] Add outline functionality (NB: this might come for free from tinymist?)
--   [ ] Ensure that slides work properly
 -   [ ] Sync memory files on save
 -   [ ] Solve some out of bounds problem? (jump to source on certain symbols)
 -   [ ] Refresh local variables of connected files when running clear-active-files

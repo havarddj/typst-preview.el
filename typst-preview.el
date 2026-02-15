@@ -69,7 +69,7 @@
   :group 'Languages
   :link '(url-link "https://github.com/havarddj/typst-preview.el"))
 
-;;;; Variables
+;;;; Functions
 
 ;; PUBLIC
 
@@ -133,6 +133,10 @@ Should be a list of strings."
 (defcustom typst-preview-default-dir "."
   "Default root directory for preview. Can be a relative path."
   :type 'string :group 'typst-preview)
+
+(defcustom typst-preview-preview-mode "document"
+  "Configure the preview mode (document or slides)."
+  :type 'string :group 'typst-preview :options '("document" "slide"))
 
 ;; PRIVATE
 
@@ -235,6 +239,7 @@ open a default browser window."
 	       "--data-plane-host" "127.0.0.1:0"
 	       "--root" ,(file-truename typst-preview-default-dir)
 	       "--invert-colors" ,typst-preview-invert-colors
+	       "--preview-mode" ,typst-preview-preview-mode
 	       ,@typst-preview-cmd-options ,typst-preview--master-file)))
 	(setf (typst-preview--master-process typst-preview--local-master)
 	      (apply #'start-process "typst-preview-proc" (get-buffer-create "*ws-typst-server*") preview-args)))
