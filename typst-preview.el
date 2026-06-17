@@ -249,7 +249,7 @@ open a default browser window."
 	       "--root" ,(file-truename typst-preview-default-dir)
 	       "--invert-colors" ,typst-preview-invert-colors
 	       "--preview-mode" ,typst-preview-preview-mode
-	       "--verbose"
+	       ,@(typst-preview--verbose-parameter)
 	       ,@typst-preview-cmd-options ,typst-preview--master-file)))
 	(setf (typst-preview--master-process typst-preview--local-master)
 	      (apply #'start-process "typst-preview-proc" (get-buffer-create "*ws-typst-server*") preview-args)))
@@ -498,6 +498,14 @@ was used without argument."
   (if (value< (typst-preview--get-tinymist-version) '(0 13 17) )
       (if typst-preview-partial-rendering '("--partial-rendering") '())
     (list "--partial-rendering" (if typst-preview-partial-rendering "true" "false"))))
+
+(defun typst-preview--verbose-parameter ()
+  "Decide whether to include --verbose argument.
+
+This depends on tinymist version: it is only necessary after v0.14.20.
+"
+  (if (value< '(0 14 19) (typst-preview--get-tinymist-version))
+      '("--verbose")))
 
 ;;;; Footer
 
