@@ -139,6 +139,7 @@ This project is licensed under the GPL License - see the LICENSE.md file for det
 # Todos:
 If you want to get involved, here are some suggestions for potential improvements:
 
+-   [ ] Get rid of `--static-file-host`, which will be deprecated at some point in the future
 -   [ ] Create an option to let the tinymist language server handle previews
 -   [ ] Implement better error message handling
 -   [ ] Implement better error handling in general

@@ -16,11 +16,11 @@ Live preview of typst files inside emacs! Building on #link("https://github.com/
 		- Live preview of edits
 		- Source to preview jumping
 		- Preview to source jumping]]
-)]
-= Installation
+    )]
 
-== MELPA
-Currently not on Melpa. 
+#text(fill: red)[WARNING: this is an old version of the readme, and only included for demonstration. The information will be outdated!]
+
+= Installation
 
 == Manual installation
 
@@ -48,7 +48,7 @@ Or, if you use `use-package`, try:
 == Basic usage
 Inside a .typ-file, run `M-x typst-preview-mode`. This will start a preview in your default browser, and connect the source buffer to the server, sending live updates.
 
-Start, stop and restart ~typst-preview~ using ~M-x typst-preview-start~, ~M-x typst-preview-stop~ and ~M-x typst-preview-restart~. 
+Start, stop and restart `typst-preview` using `M-x typst-preview-start`, `M-x typst-preview-stop` and `M-x typst-preview-restart`. 
 
 Jumping from source to preview: `M-x typst-preview-send-position`. 
 This only works in text (i.e. not in a code block or in math mode) because of how the typst compiler works. See #link("https://github.com/Enter-tainer/typst-preview/issues/182") 

@@ -2,7 +2,7 @@
 
 ;; To run tests, eval buffer then M-x ert
 (setq load-prefer-newer t)
-(require 'typst-preview)
+;; (require 'typst-preview)
 
 
 (ert-deftest preview-test ()
@@ -18,7 +18,7 @@
 	(sleep-for 1)
 	(typst-preview-stop)
 	(should (not typst-preview--local-master))
-	(kill-this-buffer))))
+	(kill-buffer (get-file-buffer test-file)))))
 
 (ert-deftest include-test ()
     (save-window-excursion
@@ -34,7 +34,7 @@
 	(sleep-for 1)
 	(typst-preview-stop)
 	(should (not typst-preview--local-master))
-	(kill-this-buffer))))
+	(kill-buffer (get-file-buffer test-file)))))
 
 (ert-deftest old-binary-test ()
     (save-window-excursion
@@ -54,7 +54,7 @@
 	(sleep-for 1)
 	(typst-preview-stop)
 	(should (not typst-preview--local-master))
-	(kill-this-buffer))))
+	(kill-buffer (get-file-buffer test-file)))))
 
 (ert-deftest slide-test ()
     (save-window-excursion
@@ -70,4 +70,4 @@
 	(sleep-for 1)
 	(typst-preview-stop)
 	(should (not typst-preview--local-master))
-	(kill-this-buffer))))
+	(kill-buffer (get-file-buffer test-file)))))
